@@ -4,7 +4,7 @@
     {
         public int Id { get; set; }
         public int LexemeDefinitionId { get; set; }
-        public LexemeDefinition LexemeDefinition { get; set; } = null!;
+        public LexemeDefinition? LexemeDefinition { get; set; }
         public string UsageExample { get; set; } = null!;
     }
 }

@@ -3,8 +3,8 @@
     public class DictionaryLexemePair
     {
         public int UserDictionaryId { get; set; }
-        public UserDictionary UserDictionary { get; set; } = null!;
+        public UserDictionary? UserDictionary { get; set; }
         public int LexemeId { get; set; }
-        public Lexeme Lexeme { get; set; } = null!;
+        public Lexeme? Lexeme { get; set; }
     }
 }

@@ -1,0 +1,55 @@
+﻿@page
+@model DictionaryApplication.Pages.UserDictionarySelector.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>UserDictionary</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="UserDictionary.Id" />
+            <div class="form-group">
+                <label asp-for="UserDictionary.UserId" class="control-label"></label>
+                <select asp-for="UserDictionary.UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+                <span asp-validation-for="UserDictionary.UserId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserDictionary.Name" class="control-label"></label>
+                <input asp-for="UserDictionary.Name" class="form-control" />
+                <span asp-validation-for="UserDictionary.Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserDictionary.Description" class="control-label"></label>
+                <input asp-for="UserDictionary.Description" class="form-control" />
+                <span asp-validation-for="UserDictionary.Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserDictionary.StudiedLangId" class="control-label"></label>
+                <select asp-for="UserDictionary.StudiedLangId" class="form-control" asp-items="ViewBag.StudiedLangId"></select>
+                <span asp-validation-for="UserDictionary.StudiedLangId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserDictionary.TranslationLangId" class="control-label"></label>
+                <select asp-for="UserDictionary.TranslationLangId" class="form-control" asp-items="ViewBag.TranslationLangId"></select>
+                <span asp-validation-for="UserDictionary.TranslationLangId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

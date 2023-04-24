@@ -1,4 +1,6 @@
 ﻿using DictionaryApp.Models;
+using DictionaryApplication.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -8,10 +10,10 @@ using System.Reflection.Emit;
 
 namespace DictionaryApp.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public DbSet<Language> Languages { get; set; }
-        public new DbSet<User> Users { get; set; }
+        public new DbSet<ApplicationUser> Users { get; set; }
         public DbSet<UserDictionary> UserDictionaries { get; set; }
         public DbSet<Lexeme> Lexemes { get; set; }
         public DbSet<LexemeDefinition> LexemeDefinitions { get; set; }
@@ -22,8 +24,9 @@ namespace DictionaryApp.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-            Database.EnsureDeleted();
-            Database.EnsureCreated();
+            //Database.EnsureDeleted();
+            //Database.EnsureCreated();
+            SeedData.Initialize(this);
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -67,24 +70,18 @@ namespace DictionaryApp.Data
                 .HasForeignKey(l => l.LangId);
 
             // User configuring
-            builder.Entity<User>()
-                .HasOne(u => u.IdentityUser)
-                .WithOne()
-                .HasForeignKey<User>(u => u.Id)
-                .IsRequired()
-                .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<User>()
+            builder.Entity<ApplicationUser>()
                 .Property(fn => fn.FirstName)
                 .HasMaxLength(50)
                 .IsRequired();
 
-            builder.Entity<User>()
+            builder.Entity<ApplicationUser>()
                 .Property(fn => fn.LastName)
                 .HasMaxLength(50)
                 .IsRequired();
 
-            builder.Entity<User>()
+            builder.Entity<ApplicationUser>()
                 .HasMany(ud => ud.UserDictionaries)
                 .WithOne(u => u.User)
                 .HasForeignKey(ud => ud.UserId);
@@ -189,6 +186,42 @@ namespace DictionaryApp.Data
             builder.Entity<LexemePair>()
                 .Property(p => p.LexemeRelationType)
                 .HasConversion<string>();
+
+            RenameIdentityTables(builder);
+        }
+
+        protected void RenameIdentityTables(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+            builder.HasDefaultSchema("Dict");
+            builder.Entity<ApplicationUser>(entity =>
+            {
+                entity.ToTable(name: "Users");
+            });
+            builder.Entity<IdentityRole>(entity =>
+            {
+                entity.ToTable(name: "Roles");
+            });
+            builder.Entity<IdentityUserRole<string>>(entity =>
+            {
+                entity.ToTable("UserRoles");
+            });
+            builder.Entity<IdentityUserClaim<string>>(entity =>
+            {
+                entity.ToTable("UserClaims");
+            });
+            builder.Entity<IdentityUserLogin<string>>(entity =>
+            {
+                entity.ToTable("UserLogins");
+            });
+            builder.Entity<IdentityRoleClaim<string>>(entity =>
+            {
+                entity.ToTable("RoleClaims");
+            });
+            builder.Entity<IdentityUserToken<string>>(entity =>
+            {
+                entity.ToTable("UserTokens");
+            });
         }
     }
 }

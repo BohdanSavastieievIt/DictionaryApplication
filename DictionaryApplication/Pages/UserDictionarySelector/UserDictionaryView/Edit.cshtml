@@ -1,0 +1,36 @@
+﻿@page
+@model DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>LexemePair</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="LexemePair.Lexeme1Id" />
+            <input type="hidden" asp-for="LexemePair.Lexeme2Id" />
+            <div class="form-group">
+                <label asp-for="LexemePair.LexemeRelationType" class="control-label"></label>
+                <select asp-for="LexemePair.LexemeRelationType" class="form-control"></select>
+                <span asp-validation-for="LexemePair.LexemeRelationType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
