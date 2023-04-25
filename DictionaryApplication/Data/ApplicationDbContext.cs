@@ -61,8 +61,7 @@ namespace DictionaryApp.Data
 
             builder.Entity<UserDictionary>()
                 .ToTable(t => t.HasCheckConstraint("CHK_Dictionary_Languages_Not_Equal", "StudiedLangId <> TranslationLangId"))
-                .HasIndex(e => new { e.StudiedLangId, e.TranslationLangId })
-                .IsUnique();
+                .HasIndex(e => new { e.StudiedLangId, e.TranslationLangId });
 
             builder.Entity<Language>()
                 .HasMany(lg => lg.Lexemes)
@@ -167,16 +166,16 @@ namespace DictionaryApp.Data
                 .HasForeignKey(dlp => dlp.Lexeme2Id)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<Lexeme>()
-                .ToSqlQuery(@"CREATE TRIGGER TRG_DeleteLexemePairs 
-                  ON Lexemes
-                  INSTEAD OF DELETE
-                  AS
-                  BEGIN
-                      DELETE lp
-                      FROM LexemePairs lp
-                      JOIN deleted d ON lp.Lexeme1Id = d.Id OR lp.Lexeme2Id = d.Id
-                  END;");
+            //builder.Entity<Lexeme>()
+            //    .ToSqlQuery(@"CREATE TRIGGER TRG_DeleteLexemePairs 
+            //      ON Lexemes
+            //      INSTEAD OF DELETE
+            //      AS
+            //      BEGIN
+            //          DELETE lp
+            //          FROM LexemePairs lp
+            //          JOIN deleted d ON lp.Lexeme1Id = d.Id OR lp.Lexeme2Id = d.Id
+            //      END;");
 
             builder.Entity<LexemePair>()
                 .ToTable(t => t.HasCheckConstraint("CHK_Dictionary_Languages_Not_Equal", "Lexeme1Id <> Lexeme2Id"))

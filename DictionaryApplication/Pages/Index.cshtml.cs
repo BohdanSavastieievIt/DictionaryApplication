@@ -16,7 +16,7 @@ namespace DictionaryApplication.Pages
 
         public void OnGet()
         {
-
+            
         }
     }
 }

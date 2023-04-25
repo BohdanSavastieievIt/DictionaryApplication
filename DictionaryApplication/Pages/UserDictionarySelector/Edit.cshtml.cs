@@ -14,10 +14,12 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
     public class EditModel : PageModel
     {
         private readonly DictionaryApp.Data.ApplicationDbContext _context;
+        private readonly ILogger<CreateModel> _logger;
 
-        public EditModel(DictionaryApp.Data.ApplicationDbContext context)
+        public EditModel(DictionaryApp.Data.ApplicationDbContext context, ILogger<CreateModel> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [BindProperty]
@@ -36,9 +38,8 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
                 return NotFound();
             }
             UserDictionary = userdictionary;
-           ViewData["StudiedLangId"] = new SelectList(_context.Languages, "Id", "LangCode");
-           ViewData["TranslationLangId"] = new SelectList(_context.Languages, "Id", "LangCode");
-           ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["StudiedLangId"] = new SelectList(_context.Languages, "Id", "LangCode");
+            ViewData["TranslationLangId"] = new SelectList(_context.Languages, "Id", "LangCode");
             return Page();
         }
 
@@ -46,7 +47,7 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
         // For more details, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || _context.UserDictionaries == null || UserDictionary == null)
             {
                 return Page();
             }

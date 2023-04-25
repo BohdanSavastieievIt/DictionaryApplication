@@ -20,14 +20,31 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
         }
 
         public IList<LexemePair> LexemePair { get;set; } = default!;
+        public int UserDictionaryId { get; set; }
 
-        public async Task OnGetAsync()
+        public async Task OnGetAsync(int userDictionaryId = -1)
         {
             if (_context.LexemePairs != null)
             {
+                if (userDictionaryId != -1)
+                {
+                    UserDictionaryId = userDictionaryId;
+                }
+                else if (HttpContext.Request.Query.ContainsKey("id"))
+                {
+                    UserDictionaryId = int.Parse(HttpContext.Request.Query["id"].ToString());
+                }
+
+                var lexemesFromCurrentDict = _context.DictionaryLexemePairs
+                    .Where(d => d.UserDictionaryId == UserDictionaryId).Select(x => x.LexemeId);
+                
+                
                 LexemePair = await _context.LexemePairs
-                .Include(l => l.Lexeme1)
-                .Include(l => l.Lexeme2).ToListAsync();
+                    .Where(x => lexemesFromCurrentDict.Contains(x.Lexeme1Id) 
+                        || lexemesFromCurrentDict.Contains(x.Lexeme2Id) 
+                        && x.LexemeRelationType == LexemeRelationType.Translations)
+                    .Include(l => l.Lexeme1)
+                    .Include(l => l.Lexeme2).ToListAsync();
             }
         }
     }

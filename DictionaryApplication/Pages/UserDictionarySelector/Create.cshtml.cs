@@ -10,6 +10,7 @@ using DictionaryApp.Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace DictionaryApplication.Pages.UserDictionarySelector
 {
@@ -26,20 +27,12 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
             _context = context;
             _userManager = userManager;
             _logger = logger;
-            LanguageOptions = new SelectList(_context.Languages.ToList(), "Id", "Name");
         }
 
-        public SelectList LanguageOptions { get; set; }
-        public UserDictionary UserDictionary { get; set; }
-        [BindProperty]
-        public string Name { get; set; }
-        [BindProperty]
-        public string Description { get; set; }
-        [BindProperty]
-        public int StudiedLangId { get; set; }
-        [BindProperty]
-        public int TranslationLangId { get; set; }
 
+        [BindProperty]
+        public UserDictionary UserDictionary { get; set; } = null!;
+        public string CurrentUserId { get; set; } = null!;
         public async Task<IActionResult> OnGet()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -49,6 +42,10 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
+            CurrentUserId = currentUser.Id;
+            ViewData["StudiedLangId"] = new SelectList(_context.Languages, "Id", "LangCode");
+            ViewData["TranslationLangId"] = new SelectList(_context.Languages, "Id", "LangCode", _context.Languages.Skip(1).First().Id);
+
             return Page();
         }
         
@@ -56,29 +53,11 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || _context.UserDictionaries == null || UserDictionary == null)
             {
-                //foreach (var key in ModelState.Keys)
-                //{
-                //    foreach (var error in ModelState[key].Errors)
-                //    {
-                //        _logger.LogError($"Model error: {key}, {error.ErrorMessage}");
-                //    }
-                //}
                 return Page();
             }
-            UserDictionary = new UserDictionary();
-            var currentUser = await _userManager.GetUserAsync(User);
-            UserDictionary.User = currentUser;
-            UserDictionary.Name = Name;
-            if (Description != null)
-            {
-                UserDictionary.Description = Description;
-            }
             
-            UserDictionary.StudiedLanguage = await _context.Languages.FindAsync(StudiedLangId);
-            UserDictionary.TranslationLanguage = await _context.Languages.FindAsync(TranslationLangId);
-  
             _context.UserDictionaries.Add(UserDictionary);
             await _context.SaveChangesAsync();  
 
