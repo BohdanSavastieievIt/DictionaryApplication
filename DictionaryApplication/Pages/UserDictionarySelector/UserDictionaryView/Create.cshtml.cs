@@ -12,9 +12,9 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
 {
     public class CreateModel : PageModel
     {
-        private readonly DictionaryApp.Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public CreateModel(DictionaryApp.Data.ApplicationDbContext context)
+        public CreateModel(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -23,6 +23,9 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
         public Lexeme Lexeme1 { get; set; } = null!;
         [BindProperty]
         public Lexeme Lexeme2 { get; set; } = null!;
+        public LexemeDefinition LexemeDefinition { get; set; } = null!;
+        public LexemeUsageExample LexemeUsageExample { get; set; } = null!;
+
         public int UserDictionaryId { get; set; }
         public int Lexeme1LangId { get; set; }
         public int Lexeme2LangId { get; set; }
@@ -67,8 +70,8 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
                 UserDictionaryId = int.Parse(HttpContext.Request.Query["id"].ToString());
             }
             var userDictionary = await _context.UserDictionaries.FindAsync(UserDictionaryId);
-            DictionaryLexemePairs[0] = new DictionaryLexemePair { Lexeme = Lexeme1, UserDictionary = userDictionary };
-            DictionaryLexemePairs[1] = new DictionaryLexemePair { Lexeme = Lexeme2, UserDictionary = userDictionary };
+            DictionaryLexemePairs[0] = new DictionaryLexemePair { Lexeme = Lexeme1, UserDictionary = userDictionary, IsStudiedLexeme = false };
+            DictionaryLexemePairs[1] = new DictionaryLexemePair { Lexeme = Lexeme2, UserDictionary = userDictionary, IsStudiedLexeme = true };
 
             foreach (var pair in DictionaryLexemePairs)
             {

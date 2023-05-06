@@ -57,7 +57,7 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
             {
                 return Page();
             }
-            
+
             _context.UserDictionaries.Add(UserDictionary);
             await _context.SaveChangesAsync();  
 

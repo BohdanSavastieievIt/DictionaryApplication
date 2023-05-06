@@ -21,36 +21,49 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
         }
 
         [BindProperty]
-        public LexemePair LexemePair { get; set; } = default!;
+        public Lexeme Lexeme1 { get; set; } = null!;
+        [BindProperty]
+        public Lexeme Lexeme2 { get; set; } = null!;
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public LexemePair LexemePair { get; set; } = null!;
+        public int UserDictionaryId { get; set; }
+
+
+        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexeme1Id, int lexeme2Id)
         {
-            if (id == null || _context.LexemePairs == null)
+            if (_context.LexemePairs == null)
             {
                 return NotFound();
             }
 
-            var lexemepair =  await _context.LexemePairs.FirstOrDefaultAsync(m => m.Lexeme1Id == id);
-            if (lexemepair == null)
+            var lexemepair = await _context.LexemePairs
+                .Include(lp => lp.Lexeme1)
+                .Include(lp => lp.Lexeme2)
+                .FirstOrDefaultAsync(m => m.Lexeme1Id == lexeme1Id && m.Lexeme2Id == lexeme2Id);
+
+            if (lexemepair == null || lexemepair.Lexeme1 == null || lexemepair.Lexeme2 == null)
             {
                 return NotFound();
             }
+
+            UserDictionaryId = userDictionaryId;
             LexemePair = lexemepair;
-           ViewData["Lexeme1Id"] = new SelectList(_context.Lexemes, "Id", "Word");
-           ViewData["Lexeme2Id"] = new SelectList(_context.Lexemes, "Id", "Word");
+            Lexeme1 = lexemepair.Lexeme1;
+            Lexeme2 = lexemepair.Lexeme2;
             return Page();
         }
 
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(int userDictionaryId)
         {
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
-            _context.Attach(LexemePair).State = EntityState.Modified;
+            _context.Attach(Lexeme1).State = EntityState.Modified;
+            _context.Attach(Lexeme2).State = EntityState.Modified;
 
             try
             {
@@ -68,7 +81,7 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
                 }
             }
 
-            return RedirectToPage("./Index");
+            return RedirectToPage("./Index", new { userDictionaryId = userDictionaryId });
         }
 
         private bool LexemePairExists(int id)

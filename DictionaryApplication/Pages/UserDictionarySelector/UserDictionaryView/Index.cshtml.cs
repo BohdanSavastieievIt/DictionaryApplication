@@ -12,14 +12,14 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
 {
     public class IndexModel : PageModel
     {
-        private readonly DictionaryApp.Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public IndexModel(DictionaryApp.Data.ApplicationDbContext context)
+        public IndexModel(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public IList<LexemePair> LexemePair { get;set; } = default!;
+        public IList<LexemePair> LexemePairs { get;set; } = null!;
         public int UserDictionaryId { get; set; }
 
         public async Task OnGetAsync(int userDictionaryId = -1)
@@ -35,13 +35,15 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
                     UserDictionaryId = int.Parse(HttpContext.Request.Query["id"].ToString());
                 }
 
-                var lexemesFromCurrentDict = _context.DictionaryLexemePairs
+                ViewData["CurrentDictionaryName"] = _context.UserDictionaries.First(x => x.Id == UserDictionaryId).Name;
+
+                var lexemeIdsFromCurrentDict = _context.DictionaryLexemePairs
                     .Where(d => d.UserDictionaryId == UserDictionaryId).Select(x => x.LexemeId);
                 
                 
-                LexemePair = await _context.LexemePairs
-                    .Where(x => lexemesFromCurrentDict.Contains(x.Lexeme1Id) 
-                        || lexemesFromCurrentDict.Contains(x.Lexeme2Id) 
+                LexemePairs = await _context.LexemePairs
+                    .Where(x => lexemeIdsFromCurrentDict.Contains(x.Lexeme1Id) 
+                        || lexemeIdsFromCurrentDict.Contains(x.Lexeme2Id) 
                         && x.LexemeRelationType == LexemeRelationType.Translations)
                     .Include(l => l.Lexeme1)
                     .Include(l => l.Lexeme2).ToListAsync();

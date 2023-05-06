@@ -1,0 +1,47 @@
+﻿@page
+@using DictionaryApp.Models;
+@using DictionaryApplication.Data;
+@model DictionaryApplication.Pages.KnowledgeTest.SelectOtherTestParametersModel
+@{
+    ViewData["Title"] = "Select other test parameters";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form asp-action="StartTest" method="post" id="knowledgeTestForm">
+
+    <div class="form-group">
+        <label asp-for="KnowledgeTest.NumberOfWords">Number of words:</label>
+        <br />
+        <input type="number" name="KnowledgeTest.NumberOfWords" min="1" id="numberOfWordsInput" max="@Model.MaxLexemesAmount" />
+        <button type="button" id="max-words-button">max</button>
+        <br />
+        <span asp-validation-for="KnowledgeTest.NumberOfWords" class="text-danger"></span>
+    </div>
+    <br />
+
+    <div class="form-group">
+        <label>Test type:</label>
+        <br />
+        <input type="radio" asp-for="KnowledgeTest.TestType" value="AllWords" /> All words<br />
+        <input type="radio" asp-for="KnowledgeTest.TestType" value="LastWords" /> Last words<br />
+        <input type="radio" asp-for="KnowledgeTest.TestType" value="WordsWithWorstResults" /> Words with worst results<br />
+        <span asp-validation-for="KnowledgeTest.TestType" class="text-danger"></span>
+    </div>
+    <br />
+    <div class="form-group">
+        <label>Translation direction:</label>
+        <br />
+        <input type="radio" asp-for="KnowledgeTest.IsTranslationFromMainLanguage" value="true" /> Main language to secondary language<br />
+        <input type="radio" asp-for="KnowledgeTest.IsTranslationFromMainLanguage" value="false" /> Secondary language to main language<br />
+        <span asp-validation-for="KnowledgeTest.IsTranslationFromMainLanguage" class="text-danger"></span>
+    </div>
+    <br />
+    <button type="submit">Start test</button>
+</form>
+
+<script>
+    document.getElementById("max-words-button").addEventListener("click", function() {
+        document.getElementById("numberOfWordsInput").value = "@Model.MaxLexemesAmount";
+    });
+</script>

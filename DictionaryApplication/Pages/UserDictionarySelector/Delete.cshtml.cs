@@ -29,7 +29,10 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
                 return NotFound();
             }
 
-            var userdictionary = await _context.UserDictionaries.FirstOrDefaultAsync(m => m.Id == id);
+            var userdictionary = await _context.UserDictionaries
+                .Include(m => m.StudiedLanguage)
+                .Include(m => m.TranslationLanguage)
+                .FirstOrDefaultAsync(m => m.Id == id);
 
             if (userdictionary == null)
             {

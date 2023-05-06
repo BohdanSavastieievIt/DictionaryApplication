@@ -13,10 +13,10 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
 {
     public class IndexModel : PageModel
     {
-        private readonly DictionaryApp.Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public IndexModel(DictionaryApp.Data.ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public IndexModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
@@ -26,20 +26,19 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
 
         public async Task OnGetAsync()
         {
-            if (_context.UserDictionaries != null)
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (_context.UserDictionaries != null && currentUser != null)
             {
-                var currentUser = await _userManager.GetUserAsync(User);
-
-                if (currentUser == null)
-                {
-                    RedirectToPage("/Account/Login", new { area = "Identity" });
-                }
-
                 UserDictionary = await _context.UserDictionaries
                     .Where(u => u.UserId == currentUser.Id)
                     .Include(u => u.StudiedLanguage)
                     .Include(u => u.TranslationLanguage)
                     .Include(u => u.User).ToListAsync();
+            }
+            else if (currentUser == null)
+            {
+                RedirectToPage("/Account/Login", new { area = "Identity" });
             }
         }
     }

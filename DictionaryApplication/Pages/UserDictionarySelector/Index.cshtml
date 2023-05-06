@@ -44,8 +44,8 @@
                 @Html.DisplayFor(modelItem => item.TranslationLanguage.LangCode)
             </td>
             <td>
-                <a asp-page="./UserDictionaryView/Index" asp-route-id="@item.Id">Go To Words</a>
-                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-page="./UserDictionaryView/Index" asp-route-id="@item.Id">Go To Words</a> | 
+                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> | 
                 <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
             </td>
         </tr>

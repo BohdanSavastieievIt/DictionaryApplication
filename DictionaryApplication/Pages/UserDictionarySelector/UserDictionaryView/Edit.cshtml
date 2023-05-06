@@ -13,12 +13,19 @@
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="LexemePair.Lexeme1Id" />
-            <input type="hidden" asp-for="LexemePair.Lexeme2Id" />
+            <input type="hidden" asp-for="Lexeme1.Id" value="@Model.Lexeme1.Id" />
+            <input type="hidden" asp-for="Lexeme2.Id" value="@Model.Lexeme2.Id" />
+            <input type="hidden" asp-for="Lexeme1.LangId" value="@Model.Lexeme1.LangId" />
+            <input type="hidden" asp-for="Lexeme2.LangId" value="@Model.Lexeme2.LangId" />
             <div class="form-group">
-                <label asp-for="LexemePair.LexemeRelationType" class="control-label"></label>
-                <select asp-for="LexemePair.LexemeRelationType" class="form-control"></select>
-                <span asp-validation-for="LexemePair.LexemeRelationType" class="text-danger"></span>
+                <label asp-for="Lexeme1.Word" class="control-label"></label>
+                <input asp-for="Lexeme1.Word" class="form-control" />
+                <span asp-validation-for="Lexeme1.Word" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Lexeme2.Word" class="control-label"></label>
+                <input asp-for="Lexeme2.Word" class="form-control" />
+                <span asp-validation-for="Lexeme2.Word" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

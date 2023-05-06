@@ -1,0 +1,32 @@
+﻿@page
+@using DictionaryApp.Models;
+@using DictionaryApplication.Data;
+@model DictionaryApplication.Pages.KnowledgeTest.TestWordModel
+@{
+    ViewData["Title"] = "Test";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form asp-action="SumbitTranslation" method="post" id="translationForm">
+    <thead>
+        @foreach (var lexeme in Model.DisplayedLexemes)
+        {
+            <tr>@lexeme</tr>
+        }
+    </thead>
+
+    <div class="form-group">
+        <label asp-for="EnteredTranslation" class="control-label"></label>
+        <input asp-for="EnteredTranslation" class="form-control" />
+        <span asp-validation-for="EnteredTranslation" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Create" class="btn btn-primary" />
+    </div>
+</form>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}

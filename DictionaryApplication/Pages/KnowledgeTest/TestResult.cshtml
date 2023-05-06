@@ -1,0 +1,21 @@
+﻿@page
+@using DictionaryApp.Models;
+@using DictionaryApplication.Data;
+@model DictionaryApplication.Pages.KnowledgeTest.TestResultModel
+@{
+    ViewData["Title"] = "Test Result";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div>
+    <h2>
+        Your result is:
+    </h2>
+    <br />
+    <h1>@ViewData["TotalCorrectAnswers"] out of @ViewData["TotalAnswers"] (@ViewData["CorrectAnswersPercentage"]%)</h1>
+    <br />
+    <br />
+    <br />
+    <a asp-page="/UserDictionarySelector/Index">Go To Dictionaries</a>
+</div>

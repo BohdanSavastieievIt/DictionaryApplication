@@ -159,6 +159,8 @@ namespace DictionaryApplication.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    HttpContext.Session.SetString("currentUserId", currentUser.Id);
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

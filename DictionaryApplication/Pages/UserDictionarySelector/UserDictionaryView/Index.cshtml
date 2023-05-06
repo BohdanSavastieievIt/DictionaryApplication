@@ -5,7 +5,7 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>@ViewData["CurrentDictionaryName"]</h1>
 
 <p>
     <a asp-page="Create" asp-route-id="@Model.UserDictionaryId">Create New</a>
@@ -14,29 +14,33 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.LexemePair[0].Lexeme1)
+                Studied Lexeme
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.LexemePair[0].Lexeme2)
+                Translation
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.LexemePair) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Lexeme1.Word)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Lexeme2.Word)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
-            </td>
-        </tr>
-}
+        @foreach (var item in Model.LexemePairs)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Lexeme1.Word)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Lexeme2.Word)
+                </td>
+                <td>
+                    <a asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionaryId" 
+                        asp-route-lexeme1Id="@item.Lexeme1Id" asp-route-lexeme2Id="@item.Lexeme2Id">Edit</a>
+                    <a asp-page="./Details" asp-route-userDictionaryId="@Model.UserDictionaryId"
+                        asp-route-lexeme1Id="@item.Lexeme1Id" asp-route-lexeme2Id="@item.Lexeme2Id">Details</a>
+                    <a asp-page="./Delete" asp-route-userDictionaryId="@Model.UserDictionaryId"
+                        asp-route-lexeme1Id="@item.Lexeme1Id" asp-route-lexeme2Id="@item.Lexeme2Id">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

@@ -6,5 +6,6 @@
         public UserDictionary? UserDictionary { get; set; }
         public int LexemeId { get; set; }
         public Lexeme? Lexeme { get; set; }
+        public bool IsStudiedLexeme { get; set; }
     }
 }
