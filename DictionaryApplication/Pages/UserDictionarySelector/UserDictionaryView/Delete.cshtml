@@ -16,19 +16,19 @@
             Studied Word
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.LexemePair.Lexeme1.Word)
+            @Html.DisplayFor(model => model.LexemeTranslationPair.Lexeme.Word)
         </dd>
         <dt class="col-sm-2">
             Translation Word
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.LexemePair.Lexeme2.Word)
+            @Html.DisplayFor(model => model.LexemeTranslationPair.Translation.Word)
         </dd>
     </dl>
     
     <form method="post">
-        <input type="hidden" asp-for="LexemePair.Lexeme1Id" />
-        <input type="hidden" asp-for="LexemePair.Lexeme2Id" />
+        <input type="hidden" asp-for="LexemeTranslationPair.LexemeId" />
+        <input type="hidden" asp-for="LexemeTranslationPair.TranslationId" />
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-page="./Index">Back to List</a>
     </form>

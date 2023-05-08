@@ -11,6 +11,6 @@
         public Language? StudiedLanguage { get; set; }
         public int TranslationLangId { get; set; }
         public Language? TranslationLanguage { get; set; }
-        public ICollection<DictionaryLexemePair>? DictionaryLexemePairs { get; set; }
+        public ICollection<Lexeme>? Lexemes { get; set; }
     }
 }

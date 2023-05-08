@@ -21,20 +21,20 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
         }
 
         [BindProperty]
-        public LexemePair LexemePair { get; set; } = null!;
+        public LexemeTranslationPair LexemeTranslationPair { get; set; } = null!;
         public int UserDictionaryId { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexeme1Id, int lexeme2Id)
+        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexemeId, int translationId)
         {
-            if (_context.LexemePairs == null)
+            if (_context.LexemeTranslationPairs == null)
             {
                 return NotFound();
             }
 
-            var lexemepair = await _context.LexemePairs
-                .Include(lp => lp.Lexeme1)
-                .Include(lp => lp.Lexeme2)
-                .FirstOrDefaultAsync(m => m.Lexeme1Id == lexeme1Id && m.Lexeme2Id == lexeme2Id);
+            var lexemepair = await _context.LexemeTranslationPairs
+                .Include(lp => lp.Lexeme)
+                .Include(lp => lp.Translation)
+                .FirstOrDefaultAsync(m => m.LexemeId == lexemeId && m.TranslationId == translationId);
 
             if (lexemepair == null)
             {
@@ -43,29 +43,29 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
             else 
             {
                 UserDictionaryId = userDictionaryId;
-                LexemePair = lexemepair;
+                LexemeTranslationPair = lexemepair;
             }
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(int userDictionaryId, int lexeme1Id, int lexeme2Id)
+        public async Task<IActionResult> OnPostAsync(int userDictionaryId, int lexemeId, int translationId)
         {
-            if (_context.LexemePairs == null)
+            if (_context.LexemeTranslationPairs == null)
             {
                 return NotFound();
             }
             UserDictionaryId = userDictionaryId;
-            var lexemepair = await _context.LexemePairs.FindAsync(lexeme1Id, lexeme2Id);
+            var lexemeTranslationPair = await _context.LexemeTranslationPairs.FindAsync(lexemeId, translationId);
 
-            if (lexemepair != null)
+            if (lexemeTranslationPair != null)
             {
-                LexemePair = lexemepair;
-                var lexeme1 = await _context.Lexemes.FirstOrDefaultAsync(m => m.Id == lexeme1Id);
-                var lexeme2 = await _context.Lexemes.FirstOrDefaultAsync(m => m.Id == lexeme2Id);
+                LexemeTranslationPair = lexemeTranslationPair;
+                var lexeme = _context.Lexemes.First(m => m.Id == lexemeId);
+                var translation = _context.Lexemes.First(m => m.Id == translationId);
 
-                _context.Lexemes.Remove(lexeme1);
-                _context.Lexemes.Remove(lexeme2);
-                _context.LexemePairs.Remove(LexemePair);
+                _context.Lexemes.Remove(lexeme);
+                _context.Lexemes.Remove(translation);
+                _context.LexemeTranslationPairs.Remove(LexemeTranslationPair);
 
                 await _context.SaveChangesAsync();
             }

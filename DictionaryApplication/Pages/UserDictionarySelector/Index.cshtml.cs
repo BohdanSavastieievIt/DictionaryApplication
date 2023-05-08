@@ -22,24 +22,30 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
             _userManager = userManager;
         }
 
-        public IList<UserDictionary> UserDictionary { get;set; } = default!;
+        public IList<UserDictionary> UserDictionaries { get;set; } = default!;
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
-            if (_context.UserDictionaries != null && currentUser != null)
+            if (currentUser == null)
             {
-                UserDictionary = await _context.UserDictionaries
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            //TODO: change in repository
+            UserDictionaries = await _context.UserDictionaries
                     .Where(u => u.UserId == currentUser.Id)
                     .Include(u => u.StudiedLanguage)
                     .Include(u => u.TranslationLanguage)
                     .Include(u => u.User).ToListAsync();
-            }
-            else if (currentUser == null)
+
+            if (UserDictionaries == null || UserDictionaries.Count == 0)
             {
-                RedirectToPage("/Account/Login", new { area = "Identity" });
+                return RedirectToPage("Create");
             }
+
+            return Page();
         }
     }
 }

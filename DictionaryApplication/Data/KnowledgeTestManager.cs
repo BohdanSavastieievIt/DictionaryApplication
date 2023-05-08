@@ -16,9 +16,7 @@ namespace DictionaryApplication.Data
 
         public bool ContainAnyLexemes(IEnumerable<int> idsOfDictionaries)
         {
-            return _context.DictionaryLexemePairs
-                .Where(x => idsOfDictionaries.Contains(x.UserDictionaryId))
-                .Count() != 0;
+            return _context.Lexemes.Any(x => idsOfDictionaries.Contains(x.DictionaryId));
         }
         public int GetTotalLexemesAmount(IEnumerable<int> idsOfDictionaries)
         {
@@ -70,9 +68,8 @@ namespace DictionaryApplication.Data
                 lexemesRes.Add((lexeme.Id, lexeme.Word));
 
                 //var currentTranslations = lexeme.Lexeme1Pairs?.Select(x => _context.Lexemes.FirstOrDefault(y => y.Id == x.Lexeme1Id));
-                var lexemePairs = _context.LexemePairs.Where(x => x.Lexeme2Id == lexeme.Id
-                                    && x.LexemeRelationType == LexemeRelationType.Translations)
-                        .Select(x=> x.Lexeme1Id).ToList();
+                var lexemePairs = _context.LexemeTranslationPairs.Where(x => x.TranslationId == lexeme.Id)
+                        .Select(x=> x.LexemeId).ToList();
                 var currentTranslations = _context.Lexemes.Where(x => lexemePairs.Contains(x.Id)).ToList();
 
                 if (currentTranslations != null && currentTranslations.Any())
@@ -90,15 +87,7 @@ namespace DictionaryApplication.Data
         }
         public List<Lexeme> GetAllLexemesFromDictionaries(IEnumerable<int> idsOfDictionaries)
         {
-            return _context.Lexemes
-                .Where(x => idsOfDictionaries
-                    .Contains(x.DictionaryLexemePairs
-                        .FirstOrDefault(y => y.IsStudiedLexeme) != null
-                        ? x.DictionaryLexemePairs
-                        .FirstOrDefault(y => y.IsStudiedLexeme)
-                        .UserDictionaryId
-                        : -1))
-                .ToList();
+            return _context.Lexemes.Where(x => idsOfDictionaries.Contains(x.DictionaryId)).Distinct().ToList();
         }
         public List<(int LexemeId, string Answer)> GetWrongAnswers(
             List<(int LexemeId, string Lexeme)> testLexemes,

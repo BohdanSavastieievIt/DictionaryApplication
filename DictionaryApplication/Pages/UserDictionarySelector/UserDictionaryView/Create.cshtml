@@ -13,17 +13,21 @@
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Lexeme1.LangId" value="@Model.Lexeme1LangId" />
-            <input type="hidden" asp-for="Lexeme2.LangId" value="@Model.Lexeme2LangId" />
+
+            <input type="hidden" asp-for="Lexeme.LangId" value="@Model.LexemeLangId" />
+            <input type="hidden" asp-for="Translation.LangId" value="@Model.TranslationLangId" />
+            <input type="hidden" asp-for="Lexeme.DictionaryId" value="@Model.UserDictionaryId" />
+            <input type="hidden" asp-for="Translation.DictionaryId" value="@Model.UserDictionaryId" />
+
             <div class="form-group">
-                <label asp-for="Lexeme1.Word" class="control-label"></label>
-                <input asp-for="Lexeme1.Word" class="form-control" />
-                <span asp-validation-for="Lexeme1.Word" class="text-danger"></span>
+                <label asp-for="Lexeme.Word" class="control-label"></label>
+                <input asp-for="Lexeme.Word" class="form-control" />
+                <span asp-validation-for="Lexeme.Word" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Lexeme2.Word" class="control-label"></label>
-                <input asp-for="Lexeme2.Word" class="form-control" />
-                <span asp-validation-for="Lexeme2.Word" class="text-danger"></span>
+                <label asp-for="Translation.Word" class="control-label"></label>
+                <input asp-for="Translation.Word" class="form-control" />
+                <span asp-validation-for="Translation.Word" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />

@@ -13,43 +13,43 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
 {
     public class EditModel : PageModel
     {
-        private readonly DictionaryApp.Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public EditModel(DictionaryApp.Data.ApplicationDbContext context)
+        public EditModel(ApplicationDbContext context)
         {
             _context = context;
         }
 
         [BindProperty]
-        public Lexeme Lexeme1 { get; set; } = null!;
+        public Lexeme Lexeme { get; set; } = null!;
         [BindProperty]
-        public Lexeme Lexeme2 { get; set; } = null!;
+        public Lexeme Translation { get; set; } = null!;
 
-        public LexemePair LexemePair { get; set; } = null!;
+        public LexemeTranslationPair LexemeTranslationPair { get; set; } = null!;
         public int UserDictionaryId { get; set; }
 
 
-        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexeme1Id, int lexeme2Id)
+        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexemeId, int translationId)
         {
-            if (_context.LexemePairs == null)
+            if (_context.LexemeTranslationPairs == null)
             {
                 return NotFound();
             }
 
-            var lexemepair = await _context.LexemePairs
-                .Include(lp => lp.Lexeme1)
-                .Include(lp => lp.Lexeme2)
-                .FirstOrDefaultAsync(m => m.Lexeme1Id == lexeme1Id && m.Lexeme2Id == lexeme2Id);
+            var lexemepair = await _context.LexemeTranslationPairs
+                .Include(lp => lp.Lexeme)
+                .Include(lp => lp.Translation)
+                .FirstOrDefaultAsync(m => m.LexemeId == lexemeId && m.TranslationId == translationId);
 
-            if (lexemepair == null || lexemepair.Lexeme1 == null || lexemepair.Lexeme2 == null)
+            if (lexemepair == null || lexemepair.Lexeme == null || lexemepair.Translation == null)
             {
                 return NotFound();
             }
 
             UserDictionaryId = userDictionaryId;
-            LexemePair = lexemepair;
-            Lexeme1 = lexemepair.Lexeme1;
-            Lexeme2 = lexemepair.Lexeme2;
+            LexemeTranslationPair = lexemepair;
+            Lexeme = lexemepair.Lexeme;
+            Translation = lexemepair.Translation;
             return Page();
         }
 
@@ -62,8 +62,8 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
                 return Page();
             }
 
-            _context.Attach(Lexeme1).State = EntityState.Modified;
-            _context.Attach(Lexeme2).State = EntityState.Modified;
+            _context.Attach(Lexeme).State = EntityState.Modified;
+            _context.Attach(Translation).State = EntityState.Modified;
 
             try
             {
@@ -71,7 +71,7 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!LexemePairExists(LexemePair.Lexeme1Id))
+                if (!LexemePairExists(LexemeTranslationPair.LexemeId))
                 {
                     return NotFound();
                 }
@@ -86,7 +86,7 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
 
         private bool LexemePairExists(int id)
         {
-          return (_context.LexemePairs?.Any(e => e.Lexeme1Id == id)).GetValueOrDefault();
+          return (_context.LexemeTranslationPairs?.Any(e => e.LexemeId == id)).GetValueOrDefault();
         }
     }
 }

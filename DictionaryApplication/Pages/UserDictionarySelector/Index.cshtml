@@ -14,10 +14,10 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.UserDictionary[0].Name)
+                @Html.DisplayNameFor(model => model.UserDictionaries[0].Name)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.UserDictionary[0].Description)
+                @Html.DisplayNameFor(model => model.UserDictionaries[0].Description)
             </th>
             <th>
                 Studied Language
@@ -29,7 +29,7 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.UserDictionary) {
+@foreach (var item in Model.UserDictionaries) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
@@ -44,7 +44,7 @@
                 @Html.DisplayFor(modelItem => item.TranslationLanguage.LangCode)
             </td>
             <td>
-                <a asp-page="./UserDictionaryView/Index" asp-route-id="@item.Id">Go To Words</a> | 
+                    <a asp-page="./UserDictionaryView/Index" asp-route-userDictionaryId="@item.Id">Go To Words</a> |
                 <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> | 
                 <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
             </td>

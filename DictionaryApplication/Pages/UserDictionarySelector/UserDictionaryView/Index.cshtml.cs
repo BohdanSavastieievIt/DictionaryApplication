@@ -19,12 +19,12 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
             _context = context;
         }
 
-        public IList<LexemePair> LexemePairs { get;set; } = null!;
+        public IList<LexemeTranslationPair> LexemeTranslationPairs { get;set; } = null!;
         public int UserDictionaryId { get; set; }
 
         public async Task OnGetAsync(int userDictionaryId = -1)
         {
-            if (_context.LexemePairs != null)
+            if (_context.LexemeTranslationPairs != null)
             {
                 if (userDictionaryId != -1)
                 {
@@ -37,16 +37,17 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
 
                 ViewData["CurrentDictionaryName"] = _context.UserDictionaries.First(x => x.Id == UserDictionaryId).Name;
 
-                var lexemeIdsFromCurrentDict = _context.DictionaryLexemePairs
-                    .Where(d => d.UserDictionaryId == UserDictionaryId).Select(x => x.LexemeId);
+                var lexemeIdsFromCurrentDict = await _context.Lexemes
+                    .Where(x => x.DictionaryId == userDictionaryId)
+                    .Select(x => x.Id).ToListAsync();
                 
                 
-                LexemePairs = await _context.LexemePairs
-                    .Where(x => lexemeIdsFromCurrentDict.Contains(x.Lexeme1Id) 
-                        || lexemeIdsFromCurrentDict.Contains(x.Lexeme2Id) 
-                        && x.LexemeRelationType == LexemeRelationType.Translations)
-                    .Include(l => l.Lexeme1)
-                    .Include(l => l.Lexeme2).ToListAsync();
+                LexemeTranslationPairs = await _context.LexemeTranslationPairs
+                    .Where(x => lexemeIdsFromCurrentDict.Contains(x.LexemeId) 
+                        || lexemeIdsFromCurrentDict.Contains(x.TranslationId))
+                    .Include(l => l.Lexeme)
+                    .Include(l => l.Translation)
+                    .ToListAsync();
             }
         }
     }

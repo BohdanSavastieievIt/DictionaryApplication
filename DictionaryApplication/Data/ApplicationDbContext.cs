@@ -16,10 +16,7 @@ namespace DictionaryApp.Data
         public new DbSet<ApplicationUser> Users { get; set; }
         public DbSet<UserDictionary> UserDictionaries { get; set; }
         public DbSet<Lexeme> Lexemes { get; set; }
-        public DbSet<LexemeDefinition> LexemeDefinitions { get; set; }
-        public DbSet<LexemeUsageExample> LexemeUsageExamples { get; set; }
-        public DbSet<DictionaryLexemePair> DictionaryLexemePairs { get; set; }
-        public DbSet<LexemePair> LexemePairs { get; set; }
+        public DbSet<LexemeTranslationPair> LexemeTranslationPairs { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -95,11 +92,20 @@ namespace DictionaryApp.Data
                 .Property(ud => ud.Description)
                 .HasMaxLength(1000);
 
+            builder.Entity<UserDictionary>()
+                .HasMany(l => l.Lexemes)
+                .WithOne(ud => ud.Dictionary)
+                .HasForeignKey(ud => ud.DictionaryId);
+
             // Lexeme configuring
             builder.Entity<Lexeme>()
                 .Property(l => l.Word)
-                .HasMaxLength(50)
+                .HasMaxLength(100)
                 .IsRequired();
+
+            builder.Entity<Lexeme>()
+                .Property(l => l.Description)
+                .HasMaxLength(1000);
 
             builder.Entity<Lexeme>()
                 .Property(l => l.TotalTestAttempts)
@@ -109,61 +115,20 @@ namespace DictionaryApp.Data
                 .Property(l => l.CorrectTestAttempts)
                 .HasDefaultValue(0);
 
-            builder.Entity<Lexeme>()
-                .HasMany(ld => ld.LexemeDefinitions)
-                .WithOne(l => l.Lexeme)
-                .HasForeignKey(ld => ld.LexemeId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // LexemeDefinition configuring
-
-            builder.Entity<LexemeDefinition>()
-                .Property(ld => ld.Definition)
-                .HasMaxLength(1000)
-                .IsRequired();
-
-            builder.Entity<LexemeDefinition>()
-                .HasMany(ld => ld.LexemeUsageExamples)
-                .WithOne(l => l.LexemeDefinition)
-                .HasForeignKey(ld => ld.LexemeDefinitionId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // LexemeUsageExample configuring
-            builder.Entity<LexemeUsageExample>()
-                .Property(ld => ld.UsageExample)
-                .HasMaxLength(1000)
-                .IsRequired();
-
-            // DictionaryLexemePair configuring
-            builder.Entity<DictionaryLexemePair>()
-                .HasKey(dlp => new { dlp.UserDictionaryId, dlp.LexemeId });
-
-            builder.Entity<UserDictionary>()
-                .HasMany(ud => ud.DictionaryLexemePairs)
-                .WithOne(dlp => dlp.UserDictionary)
-                .HasForeignKey(dlp => dlp.UserDictionaryId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // LexemeTranslationPair configuring
+            builder.Entity<LexemeTranslationPair>()
+                .HasKey(lp => new { lp.LexemeId, lp.TranslationId });
 
             builder.Entity<Lexeme>()
-                .HasMany(ud => ud.DictionaryLexemePairs)
+                .HasMany(ud => ud.LexemePairs)
                 .WithOne(dlp => dlp.Lexeme)
                 .HasForeignKey(dlp => dlp.LexemeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // LexemePair configuring
-            builder.Entity<LexemePair>()
-                .HasKey(lp => new { lp.Lexeme1Id, lp.Lexeme2Id });
-
             builder.Entity<Lexeme>()
-                .HasMany(ud => ud.Lexeme1Pairs)
-                .WithOne(dlp => dlp.Lexeme1)
-                .HasForeignKey(dlp => dlp.Lexeme1Id)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.Entity<Lexeme>()
-                .HasMany(ud => ud.Lexeme2Pairs)
-                .WithOne(dlp => dlp.Lexeme2)
-                .HasForeignKey(dlp => dlp.Lexeme2Id)
+                .HasMany(ud => ud.TranslationPairs)
+                .WithOne(dlp => dlp.Translation)
+                .HasForeignKey(dlp => dlp.TranslationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             //builder.Entity<Lexeme>()
@@ -177,14 +142,10 @@ namespace DictionaryApp.Data
             //          JOIN deleted d ON lp.Lexeme1Id = d.Id OR lp.Lexeme2Id = d.Id
             //      END;");
 
-            builder.Entity<LexemePair>()
-                .ToTable(t => t.HasCheckConstraint("CHK_Dictionary_Languages_Not_Equal", "Lexeme1Id <> Lexeme2Id"))
-                .HasIndex(e => new { e.Lexeme1Id, e.Lexeme2Id })
+            builder.Entity<LexemeTranslationPair>()
+                .ToTable(t => t.HasCheckConstraint("CHK_Dictionary_Languages_Not_Equal", "LexemeId <> TranslationId"))
+                .HasIndex(e => new { e.LexemeId, e.TranslationId })
                 .IsUnique();
-            
-            builder.Entity<LexemePair>()
-                .Property(p => p.LexemeRelationType)
-                .HasConversion<string>();
 
             RenameIdentityTables(builder);
         }

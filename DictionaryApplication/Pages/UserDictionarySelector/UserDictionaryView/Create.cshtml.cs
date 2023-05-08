@@ -13,24 +13,23 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
     public class CreateModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<CreateModel> _logger;
 
-        public CreateModel(ApplicationDbContext context)
+        public CreateModel(ApplicationDbContext context, ILogger<CreateModel> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [BindProperty]
-        public Lexeme Lexeme1 { get; set; } = null!;
+        public Lexeme Lexeme { get; set; } = null!;
         [BindProperty]
-        public Lexeme Lexeme2 { get; set; } = null!;
-        public LexemeDefinition LexemeDefinition { get; set; } = null!;
-        public LexemeUsageExample LexemeUsageExample { get; set; } = null!;
+        public Lexeme Translation { get; set; } = null!;
 
         public int UserDictionaryId { get; set; }
-        public int Lexeme1LangId { get; set; }
-        public int Lexeme2LangId { get; set; }
-        public LexemePair LexemePair { get; set; } = null!;
-        public DictionaryLexemePair[] DictionaryLexemePairs { get; set; } = new DictionaryLexemePair[2];
+        public int LexemeLangId { get; set; }
+        public int TranslationLangId { get; set; }
+        public LexemeTranslationPair LexemeTranslationPair { get; set; } = null!;
 
 
         public IActionResult OnGet()
@@ -38,8 +37,8 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
             if (HttpContext.Request.Query.ContainsKey("id"))
             {
                 UserDictionaryId = int.Parse(HttpContext.Request.Query["id"].ToString());
-                Lexeme1LangId = _context.UserDictionaries.First(x => x.Id == UserDictionaryId).StudiedLangId;
-                Lexeme2LangId = _context.UserDictionaries.First(x => x.Id == UserDictionaryId).TranslationLangId;
+                LexemeLangId = _context.UserDictionaries.First(x => x.Id == UserDictionaryId).StudiedLangId;
+                TranslationLangId = _context.UserDictionaries.First(x => x.Id == UserDictionaryId).TranslationLangId;
             }
 
             return Page();
@@ -51,31 +50,29 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
         {
             if (!ModelState.IsValid)
             {
+                foreach (var key in ModelState.Keys)
+                {
+                    foreach (var error in ModelState[key].Errors)
+                    {
+                        _logger.LogError($"Model error: {key}, {error.ErrorMessage}");
+                    }
+                }
                 return Page();
             }
 
-            _context.Lexemes.Add(Lexeme1);
-            _context.Lexemes.Add(Lexeme2);
+            _context.Lexemes.Add(Lexeme);
+            _context.Lexemes.Add(Translation);
 
-            LexemePair = new LexemePair 
+            LexemeTranslationPair = new LexemeTranslationPair 
             { 
-                Lexeme1 = Lexeme1, 
-                Lexeme2 = Lexeme2, 
-                LexemeRelationType = LexemeRelationType.Translations
+                Lexeme = Lexeme, 
+                Translation = Translation, 
             };
-            _context.LexemePairs.Add(LexemePair);
+            _context.LexemeTranslationPairs.Add(LexemeTranslationPair);
 
             if (HttpContext.Request.Query.ContainsKey("id"))
             {
                 UserDictionaryId = int.Parse(HttpContext.Request.Query["id"].ToString());
-            }
-            var userDictionary = await _context.UserDictionaries.FindAsync(UserDictionaryId);
-            DictionaryLexemePairs[0] = new DictionaryLexemePair { Lexeme = Lexeme1, UserDictionary = userDictionary, IsStudiedLexeme = false };
-            DictionaryLexemePairs[1] = new DictionaryLexemePair { Lexeme = Lexeme2, UserDictionary = userDictionary, IsStudiedLexeme = true };
-
-            foreach (var pair in DictionaryLexemePairs)
-            {
-                _context.DictionaryLexemePairs.Add(pair);
             }
 
             await _context.SaveChangesAsync();

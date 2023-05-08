@@ -23,22 +23,20 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model.LexemePairs)
+        @foreach (var item in Model.LexemeTranslationPairs)
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Lexeme1.Word)
+                    @Html.DisplayFor(modelItem => item.Lexeme.Word)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Lexeme2.Word)
+                    @Html.DisplayFor(modelItem => item.Translation.Word)
                 </td>
                 <td>
-                    <a asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionaryId" 
-                        asp-route-lexeme1Id="@item.Lexeme1Id" asp-route-lexeme2Id="@item.Lexeme2Id">Edit</a>
-                    <a asp-page="./Details" asp-route-userDictionaryId="@Model.UserDictionaryId"
-                        asp-route-lexeme1Id="@item.Lexeme1Id" asp-route-lexeme2Id="@item.Lexeme2Id">Details</a>
+                    <a asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionaryId"
+                   asp-route-lexemeId="@item.LexemeId" asp-route-translationId="@item.TranslationId">Edit</a>
                     <a asp-page="./Delete" asp-route-userDictionaryId="@Model.UserDictionaryId"
-                        asp-route-lexeme1Id="@item.Lexeme1Id" asp-route-lexeme2Id="@item.Lexeme2Id">Delete</a>
+                   asp-route-lexemeId="@item.LexemeId" asp-route-translationId="@item.TranslationId">Delete</a>
                 </td>
             </tr>
         }
