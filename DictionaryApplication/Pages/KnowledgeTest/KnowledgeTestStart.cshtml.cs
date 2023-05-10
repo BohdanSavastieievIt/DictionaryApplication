@@ -70,6 +70,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
 
             HttpContext.Session.SetList("idsOfSelectedDictionariesForTest", IdsOfSelectedDictionariesForTest);
 
+            await HttpContext.Session.CommitAsync();
+
             return RedirectToPage("SelectOtherTestParameters");
         }
     }

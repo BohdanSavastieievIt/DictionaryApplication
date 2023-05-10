@@ -8,37 +8,80 @@
 <h1>@ViewData["CurrentDictionaryName"]</h1>
 
 <p>
-    <a asp-page="Create" asp-route-id="@Model.UserDictionaryId">Create New</a>
+    <a asp-page="Create" asp-route-userDictionaryId="@Model.UserDictionaryId">Create New</a>
 </p>
 <table class="table">
     <thead>
         <tr>
             <th>
-                Studied Lexeme
+                Number
             </th>
             <th>
-                Translation
+                Studied Lexeme (@Model.StudiedLang)
+            </th>
+            <th>
+                Translation (@Model.TranslationLang)
+            </th>
+            <th>
+                Test Results
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model.LexemeTranslationPairs)
+        @for (int i = 0; i < Model.StudiedLexemes.Count; i++)
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Lexeme.Word)
+                    @(i + 1).
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Translation.Word)
+                    @Html.DisplayFor(modelItem => Model.StudiedLexemes[i].Word)
                 </td>
+                <td>
+                    @Html.Raw(Model.Translations[i].Replace("\n", "<br />"))
+                </td>
+                @{
+                    if (Model.TestResultsPercent[i] == "")
+                    {
+                        <td>0 attempts</td>
+                    }
+                    else
+                    {
+                        <td>
+                            @Model.StudiedLexemes[i].CorrectTestAttempts out of @Model.StudiedLexemes[i].TotalTestAttempts (@Model.TestResultsPercent[i] %)
+                        </td>
+                    }
+                }
                 <td>
                     <a asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionaryId"
-                   asp-route-lexemeId="@item.LexemeId" asp-route-translationId="@item.TranslationId">Edit</a>
+                   asp-route-lexemeId="@Model.StudiedLexemes[i].Id">Edit</a>
                     <a asp-page="./Delete" asp-route-userDictionaryId="@Model.UserDictionaryId"
-                   asp-route-lexemeId="@item.LexemeId" asp-route-translationId="@item.TranslationId">Delete</a>
+                   asp-route-lexemeId="@Model.StudiedLexemes[i].Id">Delete</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="description-cell" colspan="5">
+                    <div class="description-box" style="display: none;">
+                        @Html.DisplayFor(modelItem => Model.StudiedLexemes[i].Description)
+                    </div>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('.description-box').hide(); // скрываем текстбоксы с описанием при загрузке страницы
+
+            $('tr').click(function () {
+                var box = $(this).next().find('.description-box');
+                box.slideToggle();
+            });
+        });
+    </script>
+}
+
+

@@ -21,49 +21,77 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
         }
 
         [BindProperty]
-        public Lexeme Lexeme { get; set; } = null!;
+        public string Lexeme { get; set; } = null!;
         [BindProperty]
-        public Lexeme Translation { get; set; } = null!;
+        public List<string?> Translations { get; set; }
+        [BindProperty]
+        public string? Description { get; set; }
 
-        public LexemeTranslationPair LexemeTranslationPair { get; set; } = null!;
         public int UserDictionaryId { get; set; }
+        public string StudiedLang { get; set; }
+        public string TranslationLang { get; set; }
 
 
-        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexemeId, int translationId)
+        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexemeId)
         {
-            if (_context.LexemeTranslationPairs == null)
-            {
-                return NotFound();
-            }
-
-            var lexemepair = await _context.LexemeTranslationPairs
-                .Include(lp => lp.Lexeme)
-                .Include(lp => lp.Translation)
-                .FirstOrDefaultAsync(m => m.LexemeId == lexemeId && m.TranslationId == translationId);
-
-            if (lexemepair == null || lexemepair.Lexeme == null || lexemepair.Translation == null)
-            {
-                return NotFound();
-            }
-
             UserDictionaryId = userDictionaryId;
-            LexemeTranslationPair = lexemepair;
-            Lexeme = lexemepair.Lexeme;
-            Translation = lexemepair.Translation;
+            var currentDictionary = _context.UserDictionaries
+                    .Include(x => x.StudiedLanguage)
+                    .Include(x => x.TranslationLanguage)
+                    .First(x => x.Id == UserDictionaryId);
+            StudiedLang = currentDictionary.StudiedLanguage.LangCode;
+            TranslationLang = currentDictionary.TranslationLanguage.LangCode;
+
+            Lexeme = _context.Lexemes.First(x => x.Id == lexemeId).Word;
+            Description = _context.Lexemes.First(x => x.Id == lexemeId).Description;
+            Translations = await _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexemeId)
+                .Select(x => x.Translation.Word).ToListAsync();
+
             return Page();
         }
 
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync(int userDictionaryId)
+        public async Task<IActionResult> OnPostAsync(int userDictionaryId, int lexemeId)
         {
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
-            _context.Attach(Lexeme).State = EntityState.Modified;
-            _context.Attach(Translation).State = EntityState.Modified;
+            var lexeme = await _context.Lexemes.FindAsync(lexemeId);
+            if (lexeme == null)
+            {
+                return NotFound();
+            }
+
+            lexeme.Word = Lexeme;
+            lexeme.Description = Description;
+
+            // creating translations and pairs
+            var langId = _context.UserDictionaries.First(x => x.Id == userDictionaryId).TranslationLangId;
+            var translations = new List<Lexeme>();
+            var lexemeTranslationPairs = new List<LexemeTranslationPair>();
+            foreach(var transWord in Translations)
+            {
+                if (transWord == null) continue;
+                var translation = new Lexeme { DictionaryId = userDictionaryId, Word = transWord, LangId = langId };
+                translations.Add(translation);
+                var lexemeTranslationPair = new LexemeTranslationPair { Lexeme = lexeme, Translation = translation };
+                lexemeTranslationPairs.Add(lexemeTranslationPair);
+            }
+
+            // changing db
+            var oldTranslations = _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexemeId).Select(x => x.Translation);
+            _context.Lexemes.RemoveRange(oldTranslations);
+            var oldPairs = _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexemeId);
+            _context.LexemeTranslationPairs.RemoveRange(oldPairs);
+
+            await _context.Lexemes.AddRangeAsync(translations);
+            await _context.LexemeTranslationPairs.AddRangeAsync(lexemeTranslationPairs);
+
+            //_context.Attach(Lexeme).State = EntityState.Modified;
+            //_context.Attach(Translations).State = EntityState.Modified;
 
             try
             {
@@ -71,7 +99,7 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!LexemePairExists(LexemeTranslationPair.LexemeId))
+                if (!LexemePairExists(lexemeId))
                 {
                     return NotFound();
                 }

@@ -41,6 +41,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
+            await HttpContext.Session.LoadAsync();
+
             var idsOfSelectedDictionariesForTest = HttpContext.Session.GetList<int>("idsOfSelectedDictionariesForTest");
             if (idsOfSelectedDictionariesForTest == null || idsOfSelectedDictionariesForTest.Count == 0)
             {
@@ -52,7 +54,7 @@ namespace DictionaryApplication.Pages.KnowledgeTest
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPost()
         {
             if (!ModelState.IsValid)
             {
@@ -65,6 +67,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
                 }
                 return Page();
             }
+
+            await HttpContext.Session.LoadAsync();
 
             KnowledgeTest.SelectedDictionaryIds = HttpContext.Session.GetList<int>("idsOfSelectedDictionariesForTest");
             HttpContext.Session.SetKnowledgeTest("knowledgeTestObject", KnowledgeTest);
@@ -81,6 +85,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
 
             var currentLexemeId = testLexemes.First().LexemeId;
             HttpContext.Session.SetInt32("currentLexemeId", currentLexemeId);
+
+            await HttpContext.Session.CommitAsync();
 
             return RedirectToPage("TestWord");
         }

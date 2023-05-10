@@ -68,8 +68,8 @@ namespace DictionaryApplication.Data
                 lexemesRes.Add((lexeme.Id, lexeme.Word));
 
                 //var currentTranslations = lexeme.Lexeme1Pairs?.Select(x => _context.Lexemes.FirstOrDefault(y => y.Id == x.Lexeme1Id));
-                var lexemePairs = _context.LexemeTranslationPairs.Where(x => x.TranslationId == lexeme.Id)
-                        .Select(x=> x.LexemeId).ToList();
+                var lexemePairs = _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexeme.Id)
+                        .Select(x => x.TranslationId).ToList();
                 var currentTranslations = _context.Lexemes.Where(x => lexemePairs.Contains(x.Id)).ToList();
 
                 if (currentTranslations != null && currentTranslations.Any())
@@ -87,7 +87,9 @@ namespace DictionaryApplication.Data
         }
         public List<Lexeme> GetAllLexemesFromDictionaries(IEnumerable<int> idsOfDictionaries)
         {
-            return _context.Lexemes.Where(x => idsOfDictionaries.Contains(x.DictionaryId)).Distinct().ToList();
+            return _context.Lexemes.Where(x => idsOfDictionaries.Contains(x.DictionaryId)
+                && _context.LexemeTranslationPairs.Select(y => y.LexemeId).Contains(x.Id))
+                .Distinct().ToList();
         }
         public List<(int LexemeId, string Answer)> GetWrongAnswers(
             List<(int LexemeId, string Lexeme)> testLexemes,
@@ -101,7 +103,7 @@ namespace DictionaryApplication.Data
             {
                 bool isCorrect = false;
                 var currentWordTranslations = testTranslations
-                    .Where(x => x.LexemeId == testLexemes[i].LexemeId)
+                    .Where(x => x.LexemeId == answers[i].LexemeId)
                     .Select(x => x.Lexeme); 
                 if (currentWordTranslations == null)
                 {

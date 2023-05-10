@@ -7,27 +7,41 @@
 
 <h1>Create</h1>
 
-<h4>LexemePair</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <input type="hidden" asp-for="Lexeme.LangId" value="@Model.LexemeLangId" />
-            <input type="hidden" asp-for="Translation.LangId" value="@Model.TranslationLangId" />
-            <input type="hidden" asp-for="Lexeme.DictionaryId" value="@Model.UserDictionaryId" />
-            <input type="hidden" asp-for="Translation.DictionaryId" value="@Model.UserDictionaryId" />
-
-            <div class="form-group">
-                <label asp-for="Lexeme.Word" class="control-label"></label>
-                <input asp-for="Lexeme.Word" class="form-control" />
-                <span asp-validation-for="Lexeme.Word" class="text-danger"></span>
+            <div class="form-group centered">
+                <table itemid="tblexemes">
+                    <thead>
+                        <tr>
+                            <td>Studied Lexeme (@Model.StudiedLang)</td>
+                            <td>Translations (@Model.TranslationLang)</td>
+                        </tr>
+                    </thead>
+                    <tbody class="table" id="tbbody">
+                        <tr>
+                            <td>
+                                <input asp-for="Lexeme" class="form-control" />
+                                <span asp-validation-for="Lexeme" class="text-danger"></span>
+                            </td>
+                            <td>
+                                <input asp-for="RequiredTranslation" class="form-control" />
+                                <span asp-validation-for="RequiredTranslation" class="text-danger"></span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn" id="add-translation">Add Translation</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="form-group">
-                <label asp-for="Translation.Word" class="control-label"></label>
-                <input asp-for="Translation.Word" class="form-control" />
-                <span asp-validation-for="Translation.Word" class="text-danger"></span>
+                <label asp-for="Description" class="control-label">Description (Optional)</label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
@@ -37,9 +51,39 @@
 </div>
 
 <div>
-    <a asp-page="Index">Back to List</a>
+    <a asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionaryId">Back to List</a>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            var translationIndex = 0;
+            $("#add-translation").click(function () {
+                var newRow = $("<tr>");
+                var lexemeCell = $("<td>");
+                var translationCell = $("<td>");
+                var translationInput = $("<input>")
+                    .addClass("form-control")
+                    .attr("type", "text")
+                    .attr("name", "AdditionalTranslations[" + translationIndex + "]")
+                    .attr("data-val", "true")
+                    .attr("data-val-required", "The Translation field is required.");
+                var translationValidation = $("<span>")
+                    .addClass("text-danger")
+                    .attr("data-valmsg-for", "AdditionalTranslations[" + translationIndex + "]")
+                    .attr("data-valmsg-replace", "true");
+                translationCell.append(translationInput);
+                translationCell.append(translationValidation);
+                newRow.append(lexemeCell);
+                newRow.append(translationCell);
+                $("#tbbody").append(newRow);
+                translationIndex++;
+            });
+        });
+    </script>
+
 }
+

@@ -13,64 +13,54 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
 {
     public class DeleteModel : PageModel
     {
-        private readonly DictionaryApp.Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public DeleteModel(DictionaryApp.Data.ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public DeleteModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
         }
 
-        [BindProperty]
-        public LexemeTranslationPair LexemeTranslationPair { get; set; } = null!;
+        public string Lexeme { get; set; }
+        public string? Description { get; set; }
+        public string Translations { get; set; }
         public int UserDictionaryId { get; set; }
+        public string StudiedLang { get; set; }
+        public string TranslationLang { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexemeId, int translationId)
+
+        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexemeId)
         {
-            if (_context.LexemeTranslationPairs == null)
-            {
-                return NotFound();
-            }
+            UserDictionaryId = userDictionaryId;
+            var currentDictionary = _context.UserDictionaries
+                    .Include(x => x.StudiedLanguage)
+                    .Include(x => x.TranslationLanguage)
+                    .First(x => x.Id == UserDictionaryId);
+            StudiedLang = currentDictionary.StudiedLanguage.LangCode;
+            TranslationLang = currentDictionary.TranslationLanguage.LangCode;
 
-            var lexemepair = await _context.LexemeTranslationPairs
-                .Include(lp => lp.Lexeme)
-                .Include(lp => lp.Translation)
-                .FirstOrDefaultAsync(m => m.LexemeId == lexemeId && m.TranslationId == translationId);
+            Lexeme = _context.Lexemes.First(x => x.Id == lexemeId).Word;
+            Description = _context.Lexemes.First(x => x.Id == lexemeId).Description;
+            var currentTranslations = await _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexemeId)
+                .Select(x => x.Translation.Word).ToListAsync();
 
-            if (lexemepair == null)
-            {
-                return NotFound();
-            }
-            else 
-            {
-                UserDictionaryId = userDictionaryId;
-                LexemeTranslationPair = lexemepair;
-            }
+            Translations = currentTranslations.Count > 1 ?
+                string.Join(Environment.NewLine, currentTranslations.Select((s, i) => $"{i + 1}. {s}"))
+                : currentTranslations.First();
+
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(int userDictionaryId, int lexemeId, int translationId)
+        public IActionResult OnPostAsync(int userDictionaryId, int lexemeId)
         {
-            if (_context.LexemeTranslationPairs == null)
-            {
-                return NotFound();
-            }
-            UserDictionaryId = userDictionaryId;
-            var lexemeTranslationPair = await _context.LexemeTranslationPairs.FindAsync(lexemeId, translationId);
+            var translations = _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexemeId).Select(x => x.Translation);
+            _context.Lexemes.RemoveRange(translations);
+            _context.Lexemes.Remove(_context.Lexemes.First(x => x.Id == lexemeId));
+            var pairs = _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexemeId);
+            _context.LexemeTranslationPairs.RemoveRange(pairs);
 
-            if (lexemeTranslationPair != null)
-            {
-                LexemeTranslationPair = lexemeTranslationPair;
-                var lexeme = _context.Lexemes.First(m => m.Id == lexemeId);
-                var translation = _context.Lexemes.First(m => m.Id == translationId);
+            _context.SaveChanges();
 
-                _context.Lexemes.Remove(lexeme);
-                _context.Lexemes.Remove(translation);
-                _context.LexemeTranslationPairs.Remove(LexemeTranslationPair);
-
-                await _context.SaveChangesAsync();
-            }
-
-            return RedirectToPage("./Index", new { id = UserDictionaryId});
+            return RedirectToPage("./Index", new { userDictionaryId = userDictionaryId});
         }
     }
 }

@@ -7,25 +7,55 @@
 
 <h1>Edit</h1>
 
-<h4>LexemePair</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Lexeme.Id" value="@Model.Lexeme.Id" />
-            <input type="hidden" asp-for="Translation.Id" value="@Model.Translation.Id" />
-            <input type="hidden" asp-for="Lexeme.LangId" value="@Model.Lexeme.LangId" />
-            <input type="hidden" asp-for="Translation.LangId" value="@Model.Translation.LangId" />
-            <div class="form-group">
-                <label asp-for="Lexeme.Word" class="control-label"></label>
-                <input asp-for="Lexeme.Word" class="form-control" />
-                <span asp-validation-for="Lexeme.Word" class="text-danger"></span>
+
+            <div class="form-group centered">
+                <table itemid="tblexemes">
+                    <thead>
+                        <tr>
+                            <td>Studied Lexeme (@Model.StudiedLang)</td>
+                            <td>Translations (@Model.TranslationLang)</td>
+                        </tr>
+                    </thead>
+                    <tbody class="table" id="tbbody">
+                        <tr>
+                            <td>
+                                <input asp-for="Lexeme" class="form-control" />
+                                <span asp-validation-for="Lexeme" class="text-danger"></span>
+                            </td>
+
+                            <td>
+                                <input asp-for="Translations[0]" class="form-control" oninput="$('#translations-error').addClass('d-none');"/>
+                                <span asp-validation-for="Translations[0]" class="text-danger"></span>
+                                <span class="text-danger d-none" id="translations-error">At least one translation is required.</span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn" id="add-translation">Add Translation</button>
+                            </td>
+                        </tr>
+                        @for (int i = 1; i < Model.Translations.Count; i++)
+                        {
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <input asp-for="Translations[i]" class="form-control" oninput="$('#translations-error').addClass('d-none');" />
+                                    <span asp-validation-for="Translations[i]" class="text-danger"></span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <span asp-validation-for="Translations" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Translation.Word" class="control-label"></label>
-                <input asp-for="Translation.Word" class="form-control" />
-                <span asp-validation-for="Translation.Word" class="text-danger"></span>
+                <label asp-for="Description" class="control-label">Description (Optional)</label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
@@ -35,9 +65,48 @@
 </div>
 
 <div>
-    <a asp-page="./Index">Back to List</a>
+    <a asp-page="./Index" asp-route-userDictionaryId="@Model.UserDictionaryId">Back to List</a>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            var translationIndex = @Model.Translations.Count;
+            $("#add-translation").click(function () {
+                var newRow = $("<tr>");
+                var lexemeCell = $("<td>");
+                var translationCell = $("<td>");
+                var translationInput = $("<input>")
+                    .addClass("form-control")
+                    .attr("name", "Translations[" + translationIndex + "]")
+                    .on("input", function () {
+                        $("#translations-error").addClass("d-none");
+                    });
+                var translationValidation = $("<span>")
+                    .addClass("text-danger")
+                translationCell.append(translationInput);
+                translationCell.append(translationValidation);
+
+                newRow.append(lexemeCell);
+                newRow.append(translationCell);
+                $("#tbbody").append(newRow);
+                translationIndex++;
+            });
+            $('form').submit(function (event) {
+                var translations = $('input[name*=Translations]').map(function () {
+                    return $(this).val();
+                }).get();
+                var validTranslations = translations.filter(function (translation) {
+                    return translation !== '';
+                });
+                if (validTranslations.length === 0) {
+                    $('#translations-error').removeClass('d-none');
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
 }

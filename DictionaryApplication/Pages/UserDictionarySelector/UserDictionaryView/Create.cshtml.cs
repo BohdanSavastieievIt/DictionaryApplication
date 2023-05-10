@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using DictionaryApp.Data;
 using DictionaryApp.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
 {
@@ -22,31 +23,36 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
         }
 
         [BindProperty]
-        public Lexeme Lexeme { get; set; } = null!;
+        public string Lexeme { get; set; } = null!;
         [BindProperty]
-        public Lexeme Translation { get; set; } = null!;
+        public string RequiredTranslation { get; set; } = null!;
+        [BindProperty]
+        public List<string?> AdditionalTranslations { get; set; }
+        [BindProperty]
+        public string? Description { get; set; }
 
         public int UserDictionaryId { get; set; }
-        public int LexemeLangId { get; set; }
-        public int TranslationLangId { get; set; }
-        public LexemeTranslationPair LexemeTranslationPair { get; set; } = null!;
+        public string StudiedLang { get; set; }
+        public string TranslationLang { get; set; }
+
+        //public LexemeTranslationPair LexemeTranslationPair { get; set; } = null!;
 
 
-        public IActionResult OnGet()
+        public IActionResult OnGet(int userDictionaryId)
         {
-            if (HttpContext.Request.Query.ContainsKey("id"))
-            {
-                UserDictionaryId = int.Parse(HttpContext.Request.Query["id"].ToString());
-                LexemeLangId = _context.UserDictionaries.First(x => x.Id == UserDictionaryId).StudiedLangId;
-                TranslationLangId = _context.UserDictionaries.First(x => x.Id == UserDictionaryId).TranslationLangId;
-            }
-
+            UserDictionaryId = userDictionaryId;
+            var currentDictionary = _context.UserDictionaries
+                    .Include(x => x.StudiedLanguage)
+                    .Include(x => x.TranslationLanguage)
+                    .First(x => x.Id == UserDictionaryId);
+            StudiedLang = currentDictionary.StudiedLanguage.LangCode;
+            TranslationLang = currentDictionary.TranslationLanguage.LangCode;
             return Page();
         }        
 
 
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(int userDictionaryId)
         {
             if (!ModelState.IsValid)
             {
@@ -60,24 +66,56 @@ namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
                 return Page();
             }
 
-            _context.Lexemes.Add(Lexeme);
-            _context.Lexemes.Add(Translation);
-
-            LexemeTranslationPair = new LexemeTranslationPair 
-            { 
-                Lexeme = Lexeme, 
-                Translation = Translation, 
-            };
-            _context.LexemeTranslationPairs.Add(LexemeTranslationPair);
-
-            if (HttpContext.Request.Query.ContainsKey("id"))
+            if (!HttpContext.Request.Query.ContainsKey("id"))
             {
-                UserDictionaryId = int.Parse(HttpContext.Request.Query["id"].ToString());
+                return RedirectToPage("/Index");
             }
+
+            userDictionaryId = int.Parse(HttpContext.Request.Query["id"].ToString());
+            var lexemeLangId = _context.UserDictionaries.First(x => x.Id == userDictionaryId).StudiedLangId;
+            var translationLangId = _context.UserDictionaries.First(x => x.Id == userDictionaryId).TranslationLangId;
+
+            var lexeme = new Lexeme { DictionaryId = userDictionaryId, LangId = lexemeLangId, Word = Lexeme, Description = Description };
+            var requiredTranslation = new Lexeme { DictionaryId = userDictionaryId, LangId = translationLangId, Word = RequiredTranslation };
+            var mainLexemeTranslationPair = new LexemeTranslationPair { Lexeme = lexeme, Translation = requiredTranslation };
+            _context.Lexemes.Add(lexeme);
+            _context.Lexemes.Add(requiredTranslation);
+            _context.LexemeTranslationPairs.Add(mainLexemeTranslationPair);
+
+            if (AdditionalTranslations != null) 
+            {
+                foreach (var translationWord in AdditionalTranslations)
+                {
+                    if (translationWord != null)
+                    {
+                        var translation = new Lexeme { DictionaryId = userDictionaryId, LangId = translationLangId, Word = translationWord };
+                        var lexemeTranslationPair = new LexemeTranslationPair { Lexeme = lexeme, Translation = translation };
+                        _context.Lexemes.Add(translation);
+                        _context.LexemeTranslationPairs.Add(lexemeTranslationPair);
+                    }     
+                }
+            }
+
+
+            //_context.Lexemes.Add(Lexeme);
+            //foreach(var translation in Translations)
+            //{
+            //    if (translation == null) continue;
+
+            //    _context.Lexemes.Add(translation);
+            //    var lexemeTranslationPair = new LexemeTranslationPair
+            //    {
+            //        Lexeme = Lexeme,
+            //        Translation = translation
+            //    };
+            //    _context.LexemeTranslationPairs.Add(lexemeTranslationPair);
+            //}
+
+            //_context.LexemeTranslationPairs.Add(LexemeTranslationPair);
 
             await _context.SaveChangesAsync();
 
-            return RedirectToPage("./Index", new { userDictionaryId = UserDictionaryId});
+            return RedirectToPage("./Index", new { userDictionaryId = userDictionaryId});
         }
     }
 }

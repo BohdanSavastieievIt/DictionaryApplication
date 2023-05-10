@@ -26,10 +26,12 @@ namespace DictionaryApplication.Pages.KnowledgeTest
 
         [BindProperty]
         public string EnteredTranslation { get; set; }
-        public List<string> DisplayedLexemes { get; set; } = null!;
+        public string DisplayedLexeme { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
         {
+            await HttpContext.Session.LoadAsync();
+
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
             {
@@ -44,17 +46,22 @@ namespace DictionaryApplication.Pages.KnowledgeTest
                 return RedirectToPage("KnowledgeTestStart");
             }
 
-            DisplayedLexemes = lexemes.Where(x => x.LexemeId == currentLexemeId).Select(x => x.Lexeme).ToList();
+            var displayedLexemes = lexemes.Where(x => x.LexemeId == currentLexemeId).Select(x => x.Lexeme).ToList();
+            DisplayedLexeme = displayedLexemes.Count > 1 
+                ? string.Join(Environment.NewLine, displayedLexemes.Select((s, i) => $"{i + 1}. {s}"))
+                : displayedLexemes.First();
 
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPost()
         {
             if (!ModelState.IsValid)
             {
                 return Page();
             }
+
+            await HttpContext.Session.LoadAsync();
 
             var testAnswers = HttpContext.Session.GetList<(int LexemeId, string Answer)>("testAnswers");
             var currentLexemeId = HttpContext.Session.GetInt32("currentLexemeId");
@@ -76,6 +83,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
             HttpContext.Session.SetList("testLexemesLeft", testLexemesLeft);
             var nextLexemeId = testLexemesLeft.First().LexemeId;
             HttpContext.Session.SetInt32("currentLexemeId", nextLexemeId);
+
+            await HttpContext.Session.CommitAsync();
 
             return RedirectToPage("TestWord");
         }

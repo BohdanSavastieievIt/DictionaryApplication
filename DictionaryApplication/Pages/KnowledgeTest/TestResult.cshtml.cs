@@ -35,6 +35,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
+            await HttpContext.Session.LoadAsync();
+
             int totalAnswers = HttpContext.Session.GetKnowledgeTest("knowledgeTestObject").NumberOfWords;
             int totalWrongAnswers = HttpContext.Session.GetInt32("wrongAnswersAmount") ?? 0;
             int totalCorrectAnswers = totalAnswers - totalWrongAnswers;
@@ -43,6 +45,11 @@ namespace DictionaryApplication.Pages.KnowledgeTest
             ViewData["TotalAnswers"] = totalAnswers;
             ViewData["TotalCorrectAnswers"] = totalCorrectAnswers;
             ViewData["CorrectAnswersPercentage"] = correctAnswersPercentage;
+
+            HttpContext.Session.Remove("knowledgeTestObject");
+            HttpContext.Session.Remove("wrongAnswersAmount");
+
+            await HttpContext.Session.CommitAsync();
 
             return Page();
         }

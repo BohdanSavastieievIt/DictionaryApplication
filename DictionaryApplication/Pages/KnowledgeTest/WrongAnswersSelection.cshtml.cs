@@ -31,6 +31,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
         public List<(int LexemeId, string Lexeme)> FailedLexemes { get; set; } = null!;
         public List<(int LexemeId, string Lexeme)> FailedTranslations { get; set; } = null!;
         public List<(int LexemeId, string Answer)> WrongAnswers { get; set; } = null!;
+        public List<string> FailedLexemesWord { get; set; } = new List<string>();
+        public List<string> FailedTranslationsWord { get; set; } = new List<string>();
 
 
 
@@ -62,7 +64,36 @@ namespace DictionaryApplication.Pages.KnowledgeTest
                     .Contains(x.LexemeId))
                 .ToList();
 
+            
+            foreach (var lexemeId in FailedLexemes.Select(x => x.LexemeId).Distinct())
+            {
 
+                if (FailedLexemes.Count(x => x.LexemeId == lexemeId) > 1)
+                {
+                    var lexemes = FailedLexemes.Where(x => x.LexemeId == lexemeId).Select(x => x.Lexeme);
+                    var representation = string.Join(Environment.NewLine, lexemes.Select((s, i) => $"{i + 1}. {s}"));
+                    FailedLexemesWord.Add(representation);
+                }
+                else
+                {
+                    FailedLexemesWord.Add(FailedLexemes.First(x => x.LexemeId == lexemeId).Lexeme);
+                }
+            }
+
+            foreach (var transId in FailedTranslations.Select(x => x.LexemeId).Distinct())
+            {
+
+                if (FailedTranslations.Count(x => x.LexemeId == transId) > 1)
+                {
+                    var lexemes = FailedTranslations.Where(x => x.LexemeId == transId).Select(x => x.Lexeme);
+                    var representation = string.Join(Environment.NewLine, lexemes.Select((s, i) => $"{i + 1}. {s}"));
+                    FailedTranslationsWord.Add(representation);
+                }
+                else
+                {
+                    FailedTranslationsWord.Add(FailedTranslations.First(x => x.LexemeId == transId).Lexeme);
+                }
+            }
 
             return Page();
         }

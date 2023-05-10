@@ -10,10 +10,7 @@
 
 <form asp-action="SumbitTranslation" method="post" id="translationForm">
     <thead>
-        @foreach (var lexeme in Model.DisplayedLexemes)
-        {
-            <tr>@lexeme</tr>
-        }
+        @Html.Raw(Model.DisplayedLexeme.Replace("\n", "<br />"))
     </thead>
 
     <div class="form-group">

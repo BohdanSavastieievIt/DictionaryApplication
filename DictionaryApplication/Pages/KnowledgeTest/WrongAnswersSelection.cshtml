@@ -31,15 +31,15 @@
         <tbody>
             @{
                 Model.IsAnswerChangedToCorrect = new List<bool>();
-                for (int i = 0; i < Model.FailedLexemes.Count; i++)
+                for (int i = 0; i < Model.WrongAnswers.Count; i++)
                 {
                     Model.IsAnswerChangedToCorrect.Add(false);
                     <tr>
                         <td>
-                            @Model.FailedLexemes[i].Lexeme
+                            @Html.Raw(Model.FailedLexemesWord[i].Replace("\n", "<br />"))
                         </td>
                         <td>
-                            @Model.FailedTranslations[i].Lexeme
+                            @Html.Raw(Model.FailedTranslationsWord[i].Replace("\n", "<br />"))
                         </td>
                         <td>
                             @Model.WrongAnswers[i].Answer
