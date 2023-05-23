@@ -1,5 +1,4 @@
-﻿using DictionaryApp.Models;
-using DictionaryApplication.Data;
+﻿using DictionaryApplication.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using DictionaryApplication.Models;
 
-namespace DictionaryApp.Data
+namespace DictionaryApplication.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {

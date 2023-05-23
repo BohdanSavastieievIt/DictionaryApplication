@@ -1,4 +1,4 @@
-﻿namespace DictionaryApp.Models
+﻿namespace DictionaryApplication.Models
 {
     public class LexemeTranslationPair
     {

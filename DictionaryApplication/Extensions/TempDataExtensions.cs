@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Newtonsoft.Json;
 
-namespace DictionaryApplication.Data
+namespace DictionaryApplication.Extensions
 {
     public static class TempDataExtensions
     {

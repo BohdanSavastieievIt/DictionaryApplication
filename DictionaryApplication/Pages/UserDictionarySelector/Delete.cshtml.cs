@@ -5,60 +5,44 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using DictionaryApp.Data;
-using DictionaryApp.Models;
+using DictionaryApplication.Data;
+using DictionaryApplication.Models;
+using DictionaryApplication.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DictionaryApplication.Pages.UserDictionarySelector
 {
+    [Authorize]
     public class DeleteModel : PageModel
     {
-        private readonly DictionaryApp.Data.ApplicationDbContext _context;
-
-        public DeleteModel(DictionaryApp.Data.ApplicationDbContext context)
+        private readonly IUserDictionaryRepository _repository;
+        public DeleteModel(IUserDictionaryRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         [BindProperty]
-      public UserDictionary UserDictionary { get; set; } = default!;
+        public UserDictionary UserDictionary { get; set; } = null!;
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public async Task<IActionResult> OnGetAsync(int id)
         {
-            if (id == null || _context.UserDictionaries == null)
-            {
-                return NotFound();
-            }
+            var userDictionary = await _repository.GetByIdAsync(id);
 
-            var userdictionary = await _context.UserDictionaries
-                .Include(m => m.StudiedLanguage)
-                .Include(m => m.TranslationLanguage)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (userdictionary == null)
+            if (userDictionary == null)
             {
                 return NotFound();
             }
             else 
             {
-                UserDictionary = userdictionary;
+                UserDictionary = userDictionary;
             }
+
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(int? id)
+        public async Task<IActionResult> OnPostAsync(int id)
         {
-            if (id == null || _context.UserDictionaries == null)
-            {
-                return NotFound();
-            }
-            var userdictionary = await _context.UserDictionaries.FindAsync(id);
-
-            if (userdictionary != null)
-            {
-                UserDictionary = userdictionary;
-                _context.UserDictionaries.Remove(UserDictionary);
-                await _context.SaveChangesAsync();
-            }
+            await _repository.DeleteAsync(id);
 
             return RedirectToPage("./Index");
         }

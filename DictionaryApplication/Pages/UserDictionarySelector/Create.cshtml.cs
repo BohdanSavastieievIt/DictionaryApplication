@@ -5,35 +5,39 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using DictionaryApp.Data;
-using DictionaryApp.Models;
+using DictionaryApplication.Data;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using DictionaryApplication.Models;
+using DictionaryApplication.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DictionaryApplication.Pages.UserDictionarySelector
 {
+    [Authorize]
     public class CreateModel : PageModel
     {
-        private readonly DictionaryApp.Data.ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ILogger<CreateModel> _logger;
+        private readonly IUserDictionaryRepository _dictRepository;
+        private readonly IDbRepository<Language> _langRepository;
 
-        public CreateModel(DictionaryApp.Data.ApplicationDbContext context, 
-            UserManager<ApplicationUser> userManager, 
-            ILogger<CreateModel> logger)
+
+        public CreateModel(UserManager<ApplicationUser> userManager, 
+            IUserDictionaryRepository dictRepository,
+            IDbRepository<Language> langRepository)
         {
-            _context = context;
             _userManager = userManager;
-            _logger = logger;
+            _dictRepository = dictRepository;
+            _langRepository = langRepository;
         }
-
 
         [BindProperty]
         public UserDictionary UserDictionary { get; set; } = null!;
-        public string CurrentUserId { get; set; } = null!;
-        public async Task<IActionResult> OnGet()
+        public bool ShowNoDictionariesError { get; set; }
+
+        public async Task<IActionResult> OnGet(bool isNoDictionaries = false)
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
@@ -42,9 +46,16 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            CurrentUserId = currentUser.Id;
-            ViewData["StudiedLangId"] = new SelectList(_context.Languages, "Id", "LangCode");
-            ViewData["TranslationLangId"] = new SelectList(_context.Languages, "Id", "LangCode", _context.Languages.Skip(1).First().Id);
+            if (isNoDictionaries)
+            {
+                ShowNoDictionariesError = true;
+                ViewData["NoDictionariesError"] = "Firstly, you need to create at least one dictionary and fill it with some lexemes.";
+            }
+
+            ViewData["CurrentUserId"] = currentUser.Id;
+            var languages = await _langRepository.GetAllAsync();
+            ViewData["StudiedLangId"] = new SelectList(languages, "Id", "LangCode");
+            ViewData["TranslationLangId"] = new SelectList(languages, "Id", "LangCode", languages.Skip(1).First().Id);
 
             return Page();
         }
@@ -53,13 +64,12 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid || _context.UserDictionaries == null || UserDictionary == null)
+            if (!ModelState.IsValid || UserDictionary == null)
             {
                 return Page();
             }
 
-            _context.UserDictionaries.Add(UserDictionary);
-            await _context.SaveChangesAsync();  
+            await _dictRepository.CreateAsync(UserDictionary);
 
             return RedirectToPage("./Index");
         }

@@ -1,36 +1,32 @@
-using DictionaryApp.Data;
-using DictionaryApp.Models;
 using DictionaryApplication.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using DictionaryApplication.Services;
+using DictionaryApplication.Models;
+using DictionaryApplication.Extensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DictionaryApplication.Pages.KnowledgeTest
 {
+    [Authorize]
     public class SelectOtherTestParametersModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ILogger<SelectOtherTestParametersModel> _logger;
-        private readonly KnowledgeTestManager _knowledgeTestManager;
+        private readonly KnowledgeTestService _knowledgeTestService;
 
         public SelectOtherTestParametersModel(
-            ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            ILogger<SelectOtherTestParametersModel> logger,
-            KnowledgeTestManager knowledgeTestManager)
+            KnowledgeTestService knowledgeTestService)
         {
-            _context = context;
             _userManager = userManager;
-            _logger = logger;
-            _knowledgeTestManager = knowledgeTestManager;
+            _knowledgeTestService = knowledgeTestService;
         }
 
         [BindProperty]
-        public KnowledgeTestModel KnowledgeTest { get; set; } = null!;
-        public List<UserDictionary> SelectedUserDictionaries { get; set; } = null!;
-        public List<Lexeme> LexemesIncluded { get; set; } = null!;
+        public KnowledgeTestParameters TestParameters { get; set; } = null!;
+        public List<int> SelectedDictionaryIds { get; set; } = null!;
         public int MaxLexemesAmount { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
@@ -48,8 +44,9 @@ namespace DictionaryApplication.Pages.KnowledgeTest
             {
                 return RedirectToPage("KnowledgeTestStart");
             }
+            SelectedDictionaryIds = idsOfSelectedDictionariesForTest;
 
-            MaxLexemesAmount = _knowledgeTestManager.GetTotalLexemesAmount(idsOfSelectedDictionariesForTest);
+            MaxLexemesAmount = await _knowledgeTestService.GetTotalLexemesAmount(idsOfSelectedDictionariesForTest.ToArray());
 
             return Page();
         }
@@ -58,33 +55,16 @@ namespace DictionaryApplication.Pages.KnowledgeTest
         {
             if (!ModelState.IsValid)
             {
-                foreach (var key in ModelState.Keys)
-                {
-                    foreach (var error in ModelState[key].Errors)
-                    {
-                        _logger.LogError($"Model error: {key}, {error.ErrorMessage}");
-                    }
-                }
                 return Page();
             }
 
             await HttpContext.Session.LoadAsync();
 
-            KnowledgeTest.SelectedDictionaryIds = HttpContext.Session.GetList<int>("idsOfSelectedDictionariesForTest");
-            HttpContext.Session.SetKnowledgeTest("knowledgeTestObject", KnowledgeTest);
+            HttpContext.Session.SetKnowledgeTest("knowledgeTestParameters", TestParameters);
 
-            var testLexemesAndTranslations = _knowledgeTestManager.GetTestLexemesAndTranslations(KnowledgeTest);
-            var testLexemes = testLexemesAndTranslations.Item1;
-            var testTranslations = testLexemesAndTranslations.Item2;
-            var testAnswers = new List<(int LexemeId, string Answer)>();
-
-            HttpContext.Session.SetList("testLexemes", testLexemes);
-            HttpContext.Session.SetList("testLexemesLeft", testLexemes);
-            HttpContext.Session.SetList("testTranslations", testTranslations);
-            HttpContext.Session.SetList("testAnswers", testAnswers);
-
-            var currentLexemeId = testLexemes.First().LexemeId;
-            HttpContext.Session.SetInt32("currentLexemeId", currentLexemeId);
+            var lexemeTestAttempts = await _knowledgeTestService.GetLexemeTestAttemptsAsync(TestParameters);
+            HttpContext.Session.SetList("lexemeTestAttempts", lexemeTestAttempts);
+            HttpContext.Session.SetInt32("currentLexemeId", 0);
 
             await HttpContext.Session.CommitAsync();
 

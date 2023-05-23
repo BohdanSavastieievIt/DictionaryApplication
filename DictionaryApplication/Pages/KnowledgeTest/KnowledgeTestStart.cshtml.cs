@@ -1,35 +1,38 @@
-using DictionaryApp.Data;
-using DictionaryApp.Models;
 using DictionaryApplication.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using DictionaryApplication.Services;
+using DictionaryApplication.Extensions;
+using DictionaryApplication.Models;
+using DictionaryApplication.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DictionaryApplication.Pages.KnowledgeTest
 {
+    [Authorize]
     public class SelectDictionariesForTestModel : PageModel
     {
-        private readonly ApplicationDbContext _context; 
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ILogger<SelectDictionariesForTestModel> _logger;
-        private readonly KnowledgeTestManager _knowledgeTestManager;
+        private readonly KnowledgeTestService _knowledgeTestService;
+        private readonly IUserDictionaryRepository _userDictionaryRepository;
         public SelectDictionariesForTestModel(
-            ApplicationDbContext context, 
             UserManager<ApplicationUser> userManager, 
-            ILogger<SelectDictionariesForTestModel> logger,
-            KnowledgeTestManager knowledgeTestManager)
+            KnowledgeTestService knowledgeTestService,
+            IUserDictionaryRepository userDictionaryRepository)
         {
-            _context = context;
             _userManager = userManager;
-            _logger = logger;
-            _knowledgeTestManager = knowledgeTestManager;
+            _knowledgeTestService = knowledgeTestService;
+            _userDictionaryRepository = userDictionaryRepository;
         }
 
         [BindProperty]
         public List<int> IdsOfSelectedDictionariesForTest { get; set; } = null!;
         public List<UserDictionary> UserDictionaries { get; set; } = null!;
-        public async Task<IActionResult> OnGetAsync()
+        public bool IsSampleEmpty { get; set; } = false;
+
+        public async Task<IActionResult> OnGetAsync(bool isEmpty)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
@@ -37,13 +40,17 @@ namespace DictionaryApplication.Pages.KnowledgeTest
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            UserDictionaries = await _context.UserDictionaries
-                .Where(x => x.UserId == currentUser.Id)
-                .ToListAsync();
+            if (isEmpty)
+            {
+                IsSampleEmpty = true;
+                ViewData["ErrorInfo"] = "Selected dictionaries contain no words.";
+            }
+
+            UserDictionaries = await _userDictionaryRepository.GetAllAsync(currentUser.Id);
 
             if(UserDictionaries.Count == 0)
             {
-                return RedirectToPage("/KnowledgeTestError", new { errorType = StartOfTheTestError.UserHasNoDictionaries });
+                return RedirectToPage("/UserDictionarySelector/Create", new { isNoDictionaries = true });
             }
 
             return Page();
@@ -53,19 +60,12 @@ namespace DictionaryApplication.Pages.KnowledgeTest
         {
             if (!ModelState.IsValid)
             {
-                foreach (var key in ModelState.Keys)
-                {
-                    foreach (var error in ModelState[key].Errors)
-                    {
-                        _logger.LogError($"Model error: {key}, {error.ErrorMessage}");
-                    }
-                }
                 return Page();
             }
 
-            if (!_knowledgeTestManager.ContainAnyLexemes(IdsOfSelectedDictionariesForTest))
+            if (!(await _knowledgeTestService.ContainAnyLexemesAsync(IdsOfSelectedDictionariesForTest)))
             {
-                return RedirectToPage("/KnowledgeTestError", new { errorType = StartOfTheTestError.SelectedDictionariesHaveNoWords });
+                return RedirectToPage("KnowledgeTestStart", new { isEmpty = true });
             }
 
             HttpContext.Session.SetList("idsOfSelectedDictionariesForTest", IdsOfSelectedDictionariesForTest);
@@ -74,11 +74,5 @@ namespace DictionaryApplication.Pages.KnowledgeTest
 
             return RedirectToPage("SelectOtherTestParameters");
         }
-    }
-
-    public enum StartOfTheTestError
-    {
-        UserHasNoDictionaries,
-        SelectedDictionariesHaveNoWords
     }
 }

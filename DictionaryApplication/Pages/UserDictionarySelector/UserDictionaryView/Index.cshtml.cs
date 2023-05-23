@@ -5,93 +5,92 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using DictionaryApp.Data;
-using DictionaryApp.Models;
+using DictionaryApplication.Data;
+using DictionaryApplication.Models;
+using DictionaryApplication.Paging;
+using DictionaryApplication.Repositories;
 
 namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
 {
-    public class IndexModel : PageModel
+    public class IndexModel : UserDictionaryViewPageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ILexemeDetailsRepository _lexemeDetailsRepository;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(ILexemeDetailsRepository lexemeDetailsRepository,
+            IUserDictionaryRepository userDictionaryRepository) : base(userDictionaryRepository)
         {
-            _context = context;
+            _lexemeDetailsRepository = lexemeDetailsRepository;
         }
 
-        public List<LexemeTranslationPair> LexemeTranslationPairs { get;set; } = null!;
-        public List<Lexeme> StudiedLexemes { get; set; } = null!;
-        public List<string> Translations { get; set; } = new List<string>();
-        public List<string> TestResultsPercent { get; set; } = new List<string>();
+        public LexemeDetailsList LexemeDetailsList { get; set; } = null!;
+        public string? SortOrder { get; set; } = null!;
+        public int FirstItemId { get; set; }
 
-        public int UserDictionaryId { get; set; }
-        public string StudiedLang { get; set; }
-        public string TranslationLang { get; set; }
-
-        public async Task OnGetAsync(int userDictionaryId = -1)
+        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int? pageId, string? sortOrder, string? searchString)
         {
-            if (_context.LexemeTranslationPairs != null)
+            await LoadUserDictionaryAsync(userDictionaryId);
+
+            // инициализация необходимых лексем
+            LexemeDetailsList = new LexemeDetailsList();
+            LexemeDetailsList.LexemeDetails = await _lexemeDetailsRepository.GetAllAsync(userDictionaryId);
+
+            // обработка сортировки
+            SortOrder = sortOrder;
+            switch (SortOrder)
             {
-                if (userDictionaryId != -1)
-                {
-                    UserDictionaryId = userDictionaryId;
-                }
-                else if (HttpContext.Request.Query.ContainsKey("id"))
-                {
-                    UserDictionaryId = int.Parse(HttpContext.Request.Query["id"].ToString());
-                }
-                else
-                {
-                    RedirectToPage("/UserDictionarySelector/Index");
-                }
-
-                var currentDictionary = _context.UserDictionaries
-                    .Include(x => x.StudiedLanguage)
-                    .Include(x => x.TranslationLanguage)
-                    .First(x => x.Id == UserDictionaryId);
-                StudiedLang = currentDictionary.StudiedLanguage.LangCode;
-                TranslationLang = currentDictionary.TranslationLanguage.LangCode;
-                ViewData["CurrentDictionaryName"] = currentDictionary.Name;
-
-                StudiedLexemes = await _context.Lexemes.Where(x => x.DictionaryId == userDictionaryId 
-                    && x.LexemePairs != null && x.LexemePairs.Count > 0).ToListAsync();
-                foreach (var lexeme in StudiedLexemes)
-                {
-                    var currentTranslations = await _context.Lexemes.Where(x => 
-                        _context.LexemeTranslationPairs
-                            .Where(y => y.LexemeId == lexeme.Id)
-                            .Select(y => y.TranslationId).Contains(x.Id))
-                        .Select(x => x.Word)
-                        .ToListAsync();
-
-                    string translations = currentTranslations.Count > 1 ? 
-                        string.Join(Environment.NewLine, currentTranslations.Select((s, i) => $"{i + 1}. {s}"))
-                        : currentTranslations.First();
-                    Translations.Add(translations);
-
-                    if (lexeme.TotalTestAttempts > 0)
-                    {
-                        double percent = lexeme.CorrectTestAttempts / lexeme.TotalTestAttempts * 100;
-                        TestResultsPercent.Add(percent.ToString("F2"));
-                    }  
-                    else
-                    {
-                        TestResultsPercent.Add(string.Empty);
-                    }
-                }
-
-                var lexemeIdsFromCurrentDict = await _context.Lexemes
-                    .Where(x => x.DictionaryId == userDictionaryId)
-                    .Select(x => x.Id).ToListAsync();
-                
-                
-                LexemeTranslationPairs = await _context.LexemeTranslationPairs
-                    .Where(x => lexemeIdsFromCurrentDict.Contains(x.LexemeId) 
-                        || lexemeIdsFromCurrentDict.Contains(x.TranslationId))
-                    .Include(l => l.Lexeme)
-                    .Include(l => l.Translation)
-                    .ToListAsync();
+                case "date_asc":
+                    LexemeDetailsList.LexemeDetails = LexemeDetailsList.LexemeDetails.OrderBy(x => x.Lexeme.Id).ToList();
+                    break;
+                case "date_desc":
+                    LexemeDetailsList.LexemeDetails = LexemeDetailsList.LexemeDetails.OrderByDescending(x => x.Lexeme.Id).ToList();
+                    break;
+                case "alphabetical_asc":
+                    LexemeDetailsList.LexemeDetails = LexemeDetailsList.LexemeDetails.OrderBy(x => x.Lexeme.Word).ToList();
+                    break;
+                case "alphabetical_desc":
+                    LexemeDetailsList.LexemeDetails = LexemeDetailsList.LexemeDetails.OrderByDescending(x => x.Lexeme.Word).ToList();
+                    break;
+                case "test_results_asc":
+                    LexemeDetailsList.LexemeDetails = LexemeDetailsList.LexemeDetails.OrderBy(x => x.TestResults).ThenBy(x => x.Lexeme.TotalTestAttempts).ToList();
+                    break;
+                case "test_results_desc":
+                    LexemeDetailsList.LexemeDetails = LexemeDetailsList.LexemeDetails.OrderByDescending(x => x.TestResults).ThenByDescending(x => x.Lexeme.TotalTestAttempts).ToList();
+                    break;
+                default:
+                    break;
             }
+
+            // обработка поиска
+            ViewData["CurrentFilter"] = searchString;
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString = searchString.ToLower();
+                LexemeDetailsList.LexemeDetails = LexemeDetailsList.LexemeDetails
+                    .Where(s => s.Lexeme.Word.ToLower().Contains(searchString)
+                        || s.TranslationsRepresentation.ToLower().Contains(searchString))
+                    .ToList();
+            }
+
+            // обработка пагинации
+            if (pageId == null)
+            {
+                pageId = 0;
+            }
+            int pageSize = 20;
+            PagingInfo pagingInfo = new PagingInfo();
+            pagingInfo.CurrentPage = pageId == 0 ? 1 : (int)pageId;
+            pagingInfo.ItemsPerPage = pageSize;
+            FirstItemId = pageSize * (pagingInfo.CurrentPage - 1) + 1;
+
+            int skipTemp = (int)pageId == 0 ? 1 : (int)pageId;
+            var skip = pageSize * (Convert.ToInt32(skipTemp) - 1);
+            var resultTuple = await _lexemeDetailsRepository.GetAllFilterAsync(LexemeDetailsList.LexemeDetails.ToList(), skip, pageSize);
+
+            pagingInfo.TotalItems = resultTuple.Item2;
+            LexemeDetailsList.LexemeDetails = resultTuple.Item1;
+            LexemeDetailsList.PagingInfo = pagingInfo;
+
+            return Page();
         }
     }
 }

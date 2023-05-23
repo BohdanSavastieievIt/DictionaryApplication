@@ -1,55 +1,40 @@
-using DictionaryApp.Data;
-using DictionaryApp.Models;
 using DictionaryApplication.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.IdentityModel.Tokens;
+using DictionaryApplication.Models;
+using DictionaryApplication.Extensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DictionaryApplication.Pages.KnowledgeTest
 {
+    [Authorize]
     public class TestWordModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ILogger<SelectOtherTestParametersModel> _logger;
-
-        public TestWordModel(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            ILogger<SelectOtherTestParametersModel> logger)
-        {
-            _context = context;
-            _userManager = userManager;
-            _logger = logger;
-        }
+        public TestWordModel() {}
 
         [BindProperty]
-        public string EnteredTranslation { get; set; }
-        public string DisplayedLexeme { get; set; }
+        public string TestAnswer { get; set; } = null!;
+        public string DisplayedLexeme { get; set; } = null!;
 
         public async Task<IActionResult> OnGetAsync()
         {
             await HttpContext.Session.LoadAsync();
 
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
-            }
-
             var currentLexemeId = HttpContext.Session.GetInt32("currentLexemeId");
-            var lexemes = HttpContext.Session.GetList<(int LexemeId, string Lexeme)>("testLexemesLeft");
-
-            if (lexemes == null)
+            if (currentLexemeId == null)
             {
                 return RedirectToPage("KnowledgeTestStart");
             }
 
-            var displayedLexemes = lexemes.Where(x => x.LexemeId == currentLexemeId).Select(x => x.Lexeme).ToList();
-            DisplayedLexeme = displayedLexemes.Count > 1 
-                ? string.Join(Environment.NewLine, displayedLexemes.Select((s, i) => $"{i + 1}. {s}"))
-                : displayedLexemes.First();
+            var currentLexeme = HttpContext.Session.GetList<LexemeTestAttempt>("lexemeTestAttempts")[(int)currentLexemeId];
+            if (currentLexeme == null || currentLexeme.LexemeTestRepresentation == null)
+            {
+                return RedirectToPage("KnowledgeTestStart");
+            }
+
+            DisplayedLexeme = currentLexeme.LexemeTestRepresentation;
 
             return Page();
         }
@@ -63,26 +48,24 @@ namespace DictionaryApplication.Pages.KnowledgeTest
 
             await HttpContext.Session.LoadAsync();
 
-            var testAnswers = HttpContext.Session.GetList<(int LexemeId, string Answer)>("testAnswers");
+            var lexemeTestAttempts = HttpContext.Session.GetList<LexemeTestAttempt>("lexemeTestAttempts");
             var currentLexemeId = HttpContext.Session.GetInt32("currentLexemeId");
-            if (currentLexemeId != null)
+            if (currentLexemeId == null)
             {
-                testAnswers.Add(((int)currentLexemeId, EnteredTranslation));
+                return RedirectToPage("KnowledgeTestStart");
             }
-            HttpContext.Session.SetList("testAnswers", testAnswers);
 
-            var testLexemesLeft = HttpContext.Session.GetList<(int LexemeId, string Lexeme)>("testLexemesLeft");
-            testLexemesLeft = testLexemesLeft.Where(x => x.LexemeId != currentLexemeId).ToList();
-            if (!testLexemesLeft.Any())
+            lexemeTestAttempts[(int)currentLexemeId].TestAnswer = TestAnswer;
+            HttpContext.Session.SetList("lexemeTestAttempts", lexemeTestAttempts);
+
+            currentLexemeId++;
+            if (lexemeTestAttempts.Count <= currentLexemeId)
             {
-                HttpContext.Session.Remove("testLexemesLeft");
                 HttpContext.Session.Remove("currentLexemeId");
+
                 return RedirectToPage("WrongAnswersSelection");
             }
-
-            HttpContext.Session.SetList("testLexemesLeft", testLexemesLeft);
-            var nextLexemeId = testLexemesLeft.First().LexemeId;
-            HttpContext.Session.SetInt32("currentLexemeId", nextLexemeId);
+            HttpContext.Session.SetInt32("currentLexemeId", (int)currentLexemeId);
 
             await HttpContext.Session.CommitAsync();
 

@@ -5,62 +5,50 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using DictionaryApp.Data;
-using DictionaryApp.Models;
+using DictionaryApplication.Data;
 using Microsoft.AspNetCore.Identity;
+using DictionaryApplication.Models;
+using DictionaryApplication.Repositories;
+using Azure;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView
 {
-    public class DeleteModel : PageModel
+    public class DeleteModel : UserDictionaryViewPageModel
     {
-        private readonly ApplicationDbContext _context;
-
-        public DeleteModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        private readonly ILexemeInputRepository _lexemeInputRepository;
+        public DeleteModel(ILexemeInputRepository lexemeInputRepository,
+            IUserDictionaryRepository userDictionaryRepository) : base(userDictionaryRepository)
         {
-            _context = context;
+            _lexemeInputRepository = lexemeInputRepository;
         }
 
-        public string Lexeme { get; set; }
-        public string? Description { get; set; }
-        public string Translations { get; set; }
-        public int UserDictionaryId { get; set; }
-        public string StudiedLang { get; set; }
-        public string TranslationLang { get; set; }
+        public LexemeInput LexemeInput { get; set; } = null!;
+        public int CurrentPage { get; set; }
 
-
-        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexemeId)
+        public async Task<IActionResult> OnGetAsync(int userDictionaryId, int lexemeId, int pageId)
         {
-            UserDictionaryId = userDictionaryId;
-            var currentDictionary = _context.UserDictionaries
-                    .Include(x => x.StudiedLanguage)
-                    .Include(x => x.TranslationLanguage)
-                    .First(x => x.Id == UserDictionaryId);
-            StudiedLang = currentDictionary.StudiedLanguage.LangCode;
-            TranslationLang = currentDictionary.TranslationLanguage.LangCode;
+            await LoadUserDictionaryAsync(userDictionaryId);
+            var lexemeInput = await _lexemeInputRepository.GetByIdAsync(lexemeId);
+            if (lexemeInput == null)
+            {
+                return RedirectToPage("./Index", new { userDictionaryId = userDictionaryId, pageId = pageId });
+            }
+            else
+            {
+                LexemeInput = lexemeInput;
+            }
 
-            Lexeme = _context.Lexemes.First(x => x.Id == lexemeId).Word;
-            Description = _context.Lexemes.First(x => x.Id == lexemeId).Description;
-            var currentTranslations = await _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexemeId)
-                .Select(x => x.Translation.Word).ToListAsync();
-
-            Translations = currentTranslations.Count > 1 ?
-                string.Join(Environment.NewLine, currentTranslations.Select((s, i) => $"{i + 1}. {s}"))
-                : currentTranslations.First();
+            CurrentPage = pageId;
 
             return Page();
         }
 
-        public IActionResult OnPostAsync(int userDictionaryId, int lexemeId)
+        public async Task<IActionResult> OnPostAsync(int userDictionaryId, int lexemeId, int pageId)
         {
-            var translations = _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexemeId).Select(x => x.Translation);
-            _context.Lexemes.RemoveRange(translations);
-            _context.Lexemes.Remove(_context.Lexemes.First(x => x.Id == lexemeId));
-            var pairs = _context.LexemeTranslationPairs.Where(x => x.LexemeId == lexemeId);
-            _context.LexemeTranslationPairs.RemoveRange(pairs);
+            await _lexemeInputRepository.DeleteAsync(lexemeId);
 
-            _context.SaveChanges();
-
-            return RedirectToPage("./Index", new { userDictionaryId = userDictionaryId});
+            return RedirectToPage("./Index", new { userDictionaryId = userDictionaryId, pageId = pageId});
         }
     }
 }

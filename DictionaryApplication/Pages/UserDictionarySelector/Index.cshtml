@@ -1,11 +1,14 @@
-﻿@page
+﻿@page "{id:int?}"
+@using Microsoft.AspNetCore.Mvc.RazorPages;
+@using Models;
+@using Paging;
 @model DictionaryApplication.Pages.UserDictionarySelector.IndexModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "My Dictionaries";
 }
 
-<h1>Index</h1>
+<h1>My Dictionaries</h1>
 
 <p>
     <a asp-page="Create">Create New</a>
@@ -14,10 +17,10 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.UserDictionaries[0].Name)
+                Dictionary
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.UserDictionaries[0].Description)
+                Description
             </th>
             <th>
                 Studied Language
@@ -29,24 +32,24 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.UserDictionaries) {
+@foreach (var dict in Model.UserDictionaries) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Name)
+                @Html.DisplayFor(modelItem => dict.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Description)
+                @Html.DisplayFor(modelItem => dict.Description)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.StudiedLanguage.LangCode)
+                @Html.DisplayFor(modelItem => dict.StudiedLanguage.LangCode)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.TranslationLanguage.LangCode)
+                @Html.DisplayFor(modelItem => dict.TranslationLanguage.LangCode)
             </td>
             <td>
-                <a asp-page="./UserDictionaryView/Index" asp-route-userDictionaryId="@item.Id">Go To Words</a> |
-                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> | 
-                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+                    <a asp-page="./UserDictionaryView/Index" asp-route-pageId="1" asp-route-userDictionaryId="@dict.Id">Go To Words</a>
+                    <a asp-page="./Edit" asp-route-id="@dict.Id">Edit</a> |
+                <a asp-page="./Delete" asp-route-id="@dict.Id">Delete</a>
             </td>
         </tr>
 }

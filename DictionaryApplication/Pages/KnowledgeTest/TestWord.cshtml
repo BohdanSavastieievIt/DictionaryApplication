@@ -1,24 +1,23 @@
 ﻿@page
-@using DictionaryApp.Models;
+@using DictionaryApplication.Models;
 @using DictionaryApplication.Data;
 @model DictionaryApplication.Pages.KnowledgeTest.TestWordModel
 @{
-    ViewData["Title"] = "Test";
+    ViewData["Title"] = "Enter the translation:";
 }
 
-<h1>@ViewData["Title"]</h1>
-
+<h2>@ViewData["Title"]</h2>
+<br />
 <form asp-action="SumbitTranslation" method="post" id="translationForm">
-    <thead>
+    <h5>
         @Html.Raw(Model.DisplayedLexeme.Replace("\n", "<br />"))
-    </thead>
-
+    </h5>
+    <br />
     <div class="form-group">
-        <label asp-for="EnteredTranslation" class="control-label"></label>
-        <input asp-for="EnteredTranslation" class="form-control" />
-        <span asp-validation-for="EnteredTranslation" class="text-danger"></span>
+        <input asp-for="TestAnswer" class="form-control" />
+        <span asp-validation-for="TestAnswer" class="text-danger"></span>
     </div>
-
+    <br/>
     <div class="form-group">
         <input type="submit" value="Create" class="btn btn-primary" />
     </div>

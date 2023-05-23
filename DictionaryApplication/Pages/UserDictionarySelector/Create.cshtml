@@ -6,15 +6,20 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
-
-<h4>UserDictionary</h4>
+<h1>Create your custom dictionary</h1>
 <hr />
+
+@if (Model.ShowNoDictionariesError)
+{
+    <h5 style="color: #dc143c ">
+        @ViewData["NoDictionariesError"]
+    </h5>
+}
 <div class="row">
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="UserDictionary.UserId" value="@Model.CurrentUserId"/>
+            <input type="hidden" asp-for="UserDictionary.UserId" value="@ViewData["CurrentUserId"]"/>
             <div class="form-group">
                 <label asp-for="UserDictionary.Name" class="control-label"></label>
                 <input asp-for="UserDictionary.Name" class="form-control" />

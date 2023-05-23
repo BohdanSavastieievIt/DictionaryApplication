@@ -6,40 +6,43 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using DictionaryApp.Data;
-using DictionaryApp.Models;
+using DictionaryApplication.Data;
+using DictionaryApplication.Models;
+using DictionaryApplication.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DictionaryApplication.Pages.UserDictionarySelector
 {
+    [Authorize]
     public class EditModel : PageModel
     {
-        private readonly DictionaryApp.Data.ApplicationDbContext _context;
+        private readonly IUserDictionaryRepository _dictRepository;
+        private readonly IDbRepository<Language> _langRepository;
         private readonly ILogger<CreateModel> _logger;
 
-        public EditModel(DictionaryApp.Data.ApplicationDbContext context, ILogger<CreateModel> logger)
+        public EditModel(IUserDictionaryRepository dictRepository,IDbRepository<Language> langRepository, ILogger<CreateModel> logger)
         {
-            _context = context;
+            _dictRepository = dictRepository;
+            _langRepository = langRepository;
             _logger = logger;
         }
 
         [BindProperty]
         public UserDictionary UserDictionary { get; set; } = default!;
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public async Task<IActionResult> OnGetAsync(int id)
         {
-            if (id == null || _context.UserDictionaries == null)
-            {
-                return NotFound();
-            }
-
-            var userdictionary =  await _context.UserDictionaries.FirstOrDefaultAsync(m => m.Id == id);
+            var userdictionary = await _dictRepository.GetByIdAsync(id);
             if (userdictionary == null)
             {
                 return NotFound();
             }
             UserDictionary = userdictionary;
-            ViewData["StudiedLangId"] = new SelectList(_context.Languages, "Id", "LangCode");
-            ViewData["TranslationLangId"] = new SelectList(_context.Languages, "Id", "LangCode");
+
+            var languages = await _langRepository.GetAllAsync();
+
+            ViewData["StudiedLangId"] = new SelectList(languages, "Id", "LangCode");
+            ViewData["TranslationLangId"] = new SelectList(languages, "Id", "LangCode");
             return Page();
         }
 
@@ -47,35 +50,14 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
         // For more details, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid || _context.UserDictionaries == null || UserDictionary == null)
+            if (!ModelState.IsValid || UserDictionary == null)
             {
                 return Page();
             }
 
-            _context.Attach(UserDictionary).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserDictionaryExists(UserDictionary.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _dictRepository.UpdateAsync(UserDictionary);
 
             return RedirectToPage("./Index");
-        }
-
-        private bool UserDictionaryExists(int id)
-        {
-          return (_context.UserDictionaries?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

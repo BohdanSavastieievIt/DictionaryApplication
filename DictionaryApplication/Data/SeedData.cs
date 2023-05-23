@@ -1,5 +1,5 @@
-﻿using DictionaryApp.Data;
-using DictionaryApp.Models;
+﻿using DictionaryApplication.Data;
+using DictionaryApplication.Models;
 
 namespace DictionaryApplication.Data
 {

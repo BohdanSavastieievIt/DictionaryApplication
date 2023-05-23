@@ -5,24 +5,28 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using DictionaryApp.Data;
-using DictionaryApp.Models;
+using DictionaryApplication.Data;
 using Microsoft.AspNetCore.Identity;
+using DictionaryApplication.Paging;
+using NuGet.Protocol.Core.Types;
+using DictionaryApplication.Models;
+using DictionaryApplication.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DictionaryApplication.Pages.UserDictionarySelector
 {
+    [Authorize]
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserDictionaryRepository _userDictionaryRepository;
 
-        public IndexModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public IndexModel(UserManager<ApplicationUser> userManager, IUserDictionaryRepository userDictionaryRepository)
         {
-            _context = context;
             _userManager = userManager;
+            _userDictionaryRepository = userDictionaryRepository;
         }
-
-        public IList<UserDictionary> UserDictionaries { get;set; } = default!;
+        public List<UserDictionary> UserDictionaries { get; set; } = null!;
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -33,16 +37,10 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            //TODO: change in repository
-            UserDictionaries = await _context.UserDictionaries
-                    .Where(u => u.UserId == currentUser.Id)
-                    .Include(u => u.StudiedLanguage)
-                    .Include(u => u.TranslationLanguage)
-                    .Include(u => u.User).ToListAsync();
-
-            if (UserDictionaries == null || UserDictionaries.Count == 0)
+            UserDictionaries  = await _userDictionaryRepository.GetAllAsync(currentUser.Id);
+            if (UserDictionaries.Count == 0)
             {
-                return RedirectToPage("Create");
+                return RedirectToPage("Create", new { isNoDictionaries = true });
             }
 
             return Page();

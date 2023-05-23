@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace DictionaryApp.Models
+namespace DictionaryApplication.Models
 {
     public class ApplicationUser : IdentityUser
     {

@@ -1,15 +1,35 @@
-﻿@page
+﻿@page "{userDictionaryId:int?}/{pageId:int?}/{sortOrder?}/{searchString?}"
 @model DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView.IndexModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Dictionary View";
 }
 
-<h1>@ViewData["CurrentDictionaryName"]</h1>
+<h1>@Model.UserDictionary.Name</h1>
 
 <p>
-    <a asp-page="Create" asp-route-userDictionaryId="@Model.UserDictionaryId">Create New</a>
+    <a asp-page="Create" asp-route-userDictionaryId="@Model.UserDictionary.Id">Create New</a>
 </p>
+<select id="sort-select" name="Sort">
+    <option value="date_asc">From oldest to newest</option>
+    <option value="date_desc">From newest to oldest</option>
+    <option value="alphabetical_asc">Aplhabetical - Ascending</option>
+    <option value="alphabetical_desc">Alphabetical - Descending</option>
+    <option value="test_results_asc">Test results - Ascending</option>
+    <option value="test_results_desc">Test results - Descending</option>
+</select>
+
+<form id="searchForm" onsubmit="return performSearch();">
+    <div class="form-actions no-color">
+        <p>
+            Search: <input type="text" id="searchInput" value="@(ViewData["CurrentFilter"] != null ? System.Net.WebUtility.HtmlDecode(ViewData["CurrentFilter"].ToString()) : string.Empty)" />
+            <input type="submit" value="Search" class="btn btn-default" /> |
+            <a asp-action="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="1" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="">Back to Full List</a>
+        </p>
+    </div>
+</form>
+
+
 <table class="table">
     <thead>
         <tr>
@@ -17,10 +37,10 @@
                 Number
             </th>
             <th>
-                Studied Lexeme (@Model.StudiedLang)
+                Studied Lexeme (@Model.UserDictionary.StudiedLanguage.LangCode)
             </th>
             <th>
-                Translation (@Model.TranslationLang)
+                Translation (@Model.UserDictionary.TranslationLanguage.LangCode)
             </th>
             <th>
                 Test Results
@@ -29,47 +49,65 @@
         </tr>
     </thead>
     <tbody>
-        @for (int i = 0; i < Model.StudiedLexemes.Count; i++)
-        {
-            <tr>
-                <td>
-                    @(i + 1).
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => Model.StudiedLexemes[i].Word)
-                </td>
-                <td>
-                    @Html.Raw(Model.Translations[i].Replace("\n", "<br />"))
-                </td>
-                @{
-                    if (Model.TestResultsPercent[i] == "")
+        @{
+            int counter = Model.FirstItemId;
+            foreach (var item in Model.LexemeDetailsList.LexemeDetails)
+            {
+                <tr>
+                    <td>
+                        @counter.
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Lexeme.Word)
+                    </td>
+                    <td>
+                        @Html.Raw(item.TranslationsRepresentation.Replace("\n", "<br />"))
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.TestResultsRepresentation)
+                    </td>
+                    <td>
+                        <a asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionary.Id"
+                   asp-route-lexemeId="@item.Lexeme.Id" asp-route-pageId="@Model.LexemeDetailsList.PagingInfo.CurrentPage">Edit</a>
+                        <a asp-page="./Delete" asp-route-userDictionaryId="@Model.UserDictionary.Id"
+                   asp-route-lexemeId="@item.Lexeme.Id" asp-route-pageId="@Model.LexemeDetailsList.PagingInfo.CurrentPage">Delete</a>
+                    </td>
+                </tr>
+                {
+                    counter++;
+                    if (item.Lexeme.Description != null)
                     {
-                        <td>0 attempts</td>
-                    }
-                    else
-                    {
-                        <td>
-                            @Model.StudiedLexemes[i].CorrectTestAttempts out of @Model.StudiedLexemes[i].TotalTestAttempts (@Model.TestResultsPercent[i] %)
-                        </td>
+                        <tr>
+                            <td class="description-cell" colspan="5">
+                                <div class="description-box" style="display: none;">
+                                    @Html.DisplayFor(modelItem => item.Lexeme.Description)
+                                </div>
+                            </td>
+                        </tr>
                     }
                 }
-                <td>
-                    <a asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionaryId"
-                   asp-route-lexemeId="@Model.StudiedLexemes[i].Id">Edit</a>
-                    <a asp-page="./Delete" asp-route-userDictionaryId="@Model.UserDictionaryId"
-                   asp-route-lexemeId="@Model.StudiedLexemes[i].Id">Delete</a>
-                </td>
-            </tr>
-            <tr>
-                <td class="description-cell" colspan="5">
-                    <div class="description-box" style="display: none;">
-                        @Html.DisplayFor(modelItem => Model.StudiedLexemes[i].Description)
-                    </div>
-                </td>
-            </tr>
+            }
         }
     </tbody>
 </table>
+
+<div class="pagingDiv">
+    @for (int i = 1; i <= Model.LexemeDetailsList.PagingInfo.TotalPages; i++)
+    {
+        if (i == Model.LexemeDetailsList.PagingInfo.CurrentPage)
+        {
+            <a class="paging active" asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="@i" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+        }
+        else
+        {
+            <a class="paging" asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="@i" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+        }
+    }
+</div>
+
+
+
+
 
 @section scripts {
     <script>
@@ -81,7 +119,37 @@
                 box.slideToggle();
             });
         });
+
+        var currentSearchString = "@ViewData["CurrentFilter"]"; // добавьте эту строку
+
+        document.getElementById("sort-select").addEventListener("change", function () {
+            var selectedValue = this.value;
+            var searchString = document.getElementById('searchInput').value;
+            window.location.assign("/UserDictionarySelector/UserDictionaryView/" + @Model.UserDictionary.Id + "/" + + @Model.LexemeDetailsList.PagingInfo.CurrentPage + "/" + selectedValue + "/" + searchString);
+        });
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var sortOrder = "@Model.SortOrder"; // Получаем значение sortOrder из модели
+            var sortSelect = document.getElementById("sort-select");
+            var options = sortSelect.options;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].value === sortOrder) {
+                    options[i].setAttribute("selected", "selected");
+                    break;
+                }
+            }
+        });
+
+        function performSearch() {
+            var searchString = document.getElementById('searchInput').value;
+            var currentSortOrder = document.getElementById('sort-select').value;
+            window.location.assign("/UserDictionarySelector/UserDictionaryView/" + @Model.UserDictionary.Id + "/" + 1 + "/" + currentSortOrder + "/" + searchString);
+            return false;
+        }
+
     </script>
 }
+
 
 

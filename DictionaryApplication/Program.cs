@@ -1,8 +1,10 @@
-using DictionaryApp.Data;
-using DictionaryApp.Models;
 using DictionaryApplication.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using DictionaryApplication.Services;
+using DictionaryApplication.Models;
+using DictionaryApplication.Repositories;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,13 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddTransient(typeof(IDbRepository<>), typeof(DbRepository<>));
+builder.Services.AddScoped<IUserDictionaryRepository, UserDictionaryRepository>();
+builder.Services.AddScoped<ILexemeDetailsRepository, LexemeDetailsRepository>();
+builder.Services.AddScoped<ILexemeInputRepository, LexemeInputRepository>();
+builder.Services.AddScoped<ILexemeTestAttemptRepository, LexemeTestAttemptRepository>();
+
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -35,13 +44,13 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.RequireUniqueEmail = true;
 });
 
-builder.Services.AddScoped<KnowledgeTestManager>();
+builder.Services.AddScoped<KnowledgeTestService>();
 
 builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromSeconds(300);
+    options.IdleTimeout = TimeSpan.FromSeconds(1800);
     //options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });

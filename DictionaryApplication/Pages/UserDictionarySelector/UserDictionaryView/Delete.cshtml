@@ -7,31 +7,42 @@
 
 <h1>Delete</h1>
 
-<h3>Are you sure you want to delete this?</h3>
+<h3>Are you sure you want to delete this lexeme from your dictionary?</h3>
 <div>
-    <h4>LexemePair</h4>
     <hr />
     <table>
         <thead>
             <tr>
-                <td>Studied Lexeme (@Model.StudiedLang)</td>
-                <td>Translations (@Model.TranslationLang)</td>
+                <td>Studied Lexeme (@Model.UserDictionary.StudiedLanguage.LangCode)</td>
+                <td>Translations (@Model.UserDictionary.TranslationLanguage.LangCode)</td>
             </tr>
         </thead>
         <tbody class="table" id="tbbody">
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => Model.Lexeme)
+                    @Html.DisplayFor(modelItem => Model.LexemeInput.Lexeme)
                 </td>
                 <td>
-                    @Html.Raw(Model.Translations.Replace("\n", "<br />"))
+                    @Model.LexemeInput.Translations[0]
                 </td>
             </tr>
+            @if(Model.LexemeInput.Translations.Count > 1)
+            {
+                for(int i = 1; i < Model.LexemeInput.Translations.Count; i++)
+                {
+                    <tr>
+                        <td></td>
+                        <td>
+                            @Model.LexemeInput.Translations[i]
+                        </td>
+                    </tr>
+                }
+            }
         </tbody>
     </table>
     
     <form method="post">
         <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-page="./Index" asp-route-userDictionaryId="@Model.UserDictionaryId">Back to List</a>
+        <a asp-page="./Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="@Model.CurrentPage">Back to List</a>
     </form>
 </div>

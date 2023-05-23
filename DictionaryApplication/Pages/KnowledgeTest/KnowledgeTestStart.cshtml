@@ -1,5 +1,5 @@
 ﻿@page
-@using DictionaryApp.Models;
+@using DictionaryApplication.Models;
 @using DictionaryApplication.Data;
 @model SelectDictionariesForTestModel
 @{
@@ -29,7 +29,14 @@
         <span asp-validation-for="IdsOfSelectedDictionariesForTest" class="text-danger"></span>
         <span id="selected-dictionaries-error" class="text-danger" style="display:none;">Please select at least one dictionary.</span>
     </div>
+    @if (Model.IsSampleEmpty)
+    {
+        <div style="color: red">
+            @ViewData["ErrorInfo"]
+        </div>
+    }
     <br />
+
 
     <button type="submit">Continue</button>
 </form>

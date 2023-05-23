@@ -14,34 +14,37 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group centered">
-                <table itemid="tblexemes">
+                <table id="lexemeTable">
                     <thead>
                         <tr>
-                            <td>Studied Lexeme (@Model.StudiedLang)</td>
-                            <td>Translations (@Model.TranslationLang)</td>
+                            <th>Studied Lexeme (@Model.UserDictionary.StudiedLanguage.LangCode)</th>
+                            <th>Translations (@Model.UserDictionary.TranslationLanguage.LangCode)</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="table" id="tbbody">
+                    <tbody id="tbbody">
                         <tr>
                             <td>
-                                <input asp-for="Lexeme" class="form-control" />
-                                <span asp-validation-for="Lexeme" class="text-danger"></span>
+                                <input asp-for="LexemeInput.Lexeme" class="form-control" />
+                                <span asp-validation-for="LexemeInput.Lexeme" class="text-danger"></span>
                             </td>
                             <td>
-                                <input asp-for="RequiredTranslation" class="form-control" />
-                                <span asp-validation-for="RequiredTranslation" class="text-danger"></span>
+                                <input type="text" name="LexemeInput.Translations[0]" class="form-control translations" required />
+                                <span class="text-danger field-validation-valid" data-valmsg-for="LexemeInput.Translations[0]" data-valmsg-replace="true"></span>
                             </td>
                             <td>
                                 <button type="button" class="btn" id="add-translation">Add Translation</button>
                             </td>
                         </tr>
                     </tbody>
+
                 </table>
+
             </div>
             <div class="form-group">
-                <label asp-for="Description" class="control-label">Description (Optional)</label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
+                <label asp-for="LexemeInput.Description" class="control-label">Description (Optional)</label>
+                <input asp-for="LexemeInput.Description" class="form-control" />
+                <span asp-validation-for="LexemeInput.Description" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
@@ -51,7 +54,7 @@
 </div>
 
 <div>
-    <a asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionaryId">Back to List</a>
+    <a asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id">Back to List</a>
 </div>
 
 @section Scripts {
@@ -60,30 +63,111 @@
     }
     <script>
         $(document).ready(function () {
-            var translationIndex = 0;
+            var totalTranslations = 0;
+
+            // Define initial rules and messages
+            var validatorRules = {
+                "LexemeInput.Lexeme": { required: true },
+                "LexemeInput.Translations[0]": { required: true }
+            };
+
+            var validatorMessages = {
+                "LexemeInput.Lexeme": { required: "The Studied Lexeme field is required." },
+                "LexemeInput.Translations[0]": { required: "The Translation field is required." }
+            };
+
+            var validator = $("form").validate({
+                rules: validatorRules,
+                messages: validatorMessages
+            });
+
+            var refreshIndexes = function () {
+                $("#tbbody").find('tr').each(function (i, row) {
+                    // skip the first row (headers)
+                    if (i === 0) return;
+
+                    var input = $(row).find("input.translations");
+                    var span = $(row).find("span.field-validation-valid");
+
+                    // should not happen, but better safe than sorry
+                    if (input.length !== 1 || span.length !== 1) {
+                        console.log("Error: unexpected number of inputs or spans in row");
+                        return;
+                    }
+
+                    // decrement index since we skip the first row
+                    var index = i;
+                    var newName = "LexemeInput.Translations[" + index + "]";
+
+                    input.attr("name", newName);
+                    span.attr("data-valmsg-for", newName);
+
+                    // Update the validation rules
+                    validator.settings.rules[newName] = { required: true };
+                    validator.settings.messages[newName] = { required: "The Translation field is required." };
+                });
+            };
+
+            $("#tbbody").on('click', '.remove-translation', function () {
+                console.log("Add remove-translation clicked");
+                $(this).closest('tr').remove();
+                refreshIndexes();
+            });
+
             $("#add-translation").click(function () {
-                var newRow = $("<tr>");
+                totalTranslations++;
+                var translationRow = $("<tr>");
+
                 var lexemeCell = $("<td>");
+
                 var translationCell = $("<td>");
+
                 var translationInput = $("<input>")
-                    .addClass("form-control")
                     .attr("type", "text")
-                    .attr("name", "AdditionalTranslations[" + translationIndex + "]")
-                    .attr("data-val", "true")
-                    .attr("data-val-required", "The Translation field is required.");
+                    .attr("name", "LexemeInput.Translations[" + totalTranslations + "]")
+                    .addClass("form-control translations")
+                    .attr("required", "required");
+
+                // Add new field to the validator
+                validator.settings.rules["LexemeInput.Translations[" + totalTranslations + "]"] = { required: true };
+                validator.settings.messages["LexemeInput.Translations[" + totalTranslations + "]"] = { required: "The Translation field is required." };
+
                 var translationValidation = $("<span>")
-                    .addClass("text-danger")
-                    .attr("data-valmsg-for", "AdditionalTranslations[" + translationIndex + "]")
+                    .addClass("text-danger field-validation-valid")
+                    .attr("data-valmsg-for", "LexemeInput.Translations[" + totalTranslations + "]")
                     .attr("data-valmsg-replace", "true");
+
                 translationCell.append(translationInput);
                 translationCell.append(translationValidation);
-                newRow.append(lexemeCell);
-                newRow.append(translationCell);
-                $("#tbbody").append(newRow);
-                translationIndex++;
-            });
-        });
-    </script>
 
+                var actionCell = $("<td>");
+
+                var translationButton = $("<button>")
+                    .attr("type", "button")
+                    .addClass("btn btn-danger remove-translation")
+                    .text("X");
+                ;
+
+                actionCell.append(translationButton);
+
+                translationRow.append(lexemeCell);
+                translationRow.append(translationCell);
+                translationRow.append(actionCell);
+
+                $("#tbbody").append(translationRow);
+                refreshIndexes();
+            });
+
+            $("form").on('submit', function (e) {
+                validator.resetForm();
+                var isValid = validator.form();
+                if (!isValid) {
+                    e.preventDefault(); //cancel submission
+                }
+            });
+
+        });
+
+    </script>
 }
 

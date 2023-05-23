@@ -1,5 +1,5 @@
 ﻿@page
-@using DictionaryApp.Models;
+@using DictionaryApplication.Models;
 @using DictionaryApplication.Data;
 @model DictionaryApplication.Pages.KnowledgeTest.SelectOtherTestParametersModel
 @{
@@ -9,32 +9,35 @@
 <h1>@ViewData["Title"]</h1>
 
 <form asp-action="StartTest" method="post" id="knowledgeTestForm">
-
+    @for(int i = 0; i < Model.SelectedDictionaryIds.Count; i++)
+    {
+        <input type="hidden" asp-for="TestParameters.SelectedDictionaryIds[i]" value="@Model.SelectedDictionaryIds[i]">
+    }
     <div class="form-group">
-        <label asp-for="KnowledgeTest.NumberOfWords">Number of words:</label>
+        <label asp-for="TestParameters.NumberOfWords">Number of words:</label>
         <br />
-        <input type="number" name="KnowledgeTest.NumberOfWords" min="1" id="numberOfWordsInput" max="@Model.MaxLexemesAmount" />
+        <input type="number" name="TestParameters.NumberOfWords" min="1" id="numberOfWordsInput" max="@Model.MaxLexemesAmount" />
         <button type="button" id="max-words-button">max</button>
         <br />
-        <span asp-validation-for="KnowledgeTest.NumberOfWords" class="text-danger"></span>
+        <span asp-validation-for="TestParameters.NumberOfWords" class="text-danger"></span>
     </div>
     <br />
 
     <div class="form-group">
         <label>Test type:</label>
         <br />
-        <input type="radio" asp-for="KnowledgeTest.TestType" value="AllWords" /> All words<br />
-        <input type="radio" asp-for="KnowledgeTest.TestType" value="LastWords" /> Last words<br />
-        <input type="radio" asp-for="KnowledgeTest.TestType" value="WordsWithWorstResults" /> Words with worst results<br />
-        <span asp-validation-for="KnowledgeTest.TestType" class="text-danger"></span>
+        <input type="radio" asp-for="TestParameters.TestType" value="AllWords" /> All words<br />
+        <input type="radio" asp-for="TestParameters.TestType" value="LastWords" /> Last words<br />
+        <input type="radio" asp-for="TestParameters.TestType" value="WordsWithWorstResults" /> Words with worst results<br />
+        <span asp-validation-for="TestParameters.TestType" class="text-danger"></span>
     </div>
     <br />
     <div class="form-group">
         <label>Translation direction:</label>
         <br />
-        <input type="radio" asp-for="KnowledgeTest.IsTranslationFromMainLanguage" value="true" /> Main language to secondary language<br />
-        <input type="radio" asp-for="KnowledgeTest.IsTranslationFromMainLanguage" value="false" /> Secondary language to main language<br />
-        <span asp-validation-for="KnowledgeTest.IsTranslationFromMainLanguage" class="text-danger"></span>
+        <input type="radio" asp-for="TestParameters.IsUserTranslatesStudiedLanguage" value="true" /> From studied language <br />
+        <input type="radio" asp-for="TestParameters.IsUserTranslatesStudiedLanguage" value="false" /> From translation language<br />
+        <span asp-validation-for="TestParameters.IsUserTranslatesStudiedLanguage" class="text-danger"></span>
     </div>
     <br />
     <button type="submit">Start test</button>

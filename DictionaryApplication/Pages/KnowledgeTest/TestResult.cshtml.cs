@@ -1,53 +1,34 @@
-using DictionaryApp.Data;
-using DictionaryApp.Models;
 using DictionaryApplication.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using DictionaryApplication.Services;
+using DictionaryApplication.Models;
+using DictionaryApplication.Extensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DictionaryApplication.Pages.KnowledgeTest
 {
+    [Authorize]
     public class TestResultModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ILogger<SelectOtherTestParametersModel> _logger;
-        private readonly KnowledgeTestManager _testManager;
-
-        public TestResultModel(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            ILogger<SelectOtherTestParametersModel> logger,
-            KnowledgeTestManager testManager)
-        {
-            _context = context;
-            _userManager = userManager;
-            _logger = logger;
-            _testManager = testManager;
-        }
-
+        public TestResultModel() {}
 
         public async Task<IActionResult> OnGetAsync()
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
-            }
-
             await HttpContext.Session.LoadAsync();
 
-            int totalAnswers = HttpContext.Session.GetKnowledgeTest("knowledgeTestObject").NumberOfWords;
-            int totalWrongAnswers = HttpContext.Session.GetInt32("wrongAnswersAmount") ?? 0;
-            int totalCorrectAnswers = totalAnswers - totalWrongAnswers;
+            var lexemeTestAttempts = HttpContext.Session.GetList<LexemeTestAttempt>("lexemeTestAttempts");
+            int totalAnswers = lexemeTestAttempts.Count;
+            int totalCorrectAnswers = lexemeTestAttempts.Count(ta => ta.IsCorrectAnswer);
             double correctAnswersPercentage = Math.Round((double)totalCorrectAnswers / totalAnswers * 100, 2);
 
             ViewData["TotalAnswers"] = totalAnswers;
             ViewData["TotalCorrectAnswers"] = totalCorrectAnswers;
             ViewData["CorrectAnswersPercentage"] = correctAnswersPercentage;
 
-            HttpContext.Session.Remove("knowledgeTestObject");
-            HttpContext.Session.Remove("wrongAnswersAmount");
+            HttpContext.Session.Remove("knowledgeTestParameters");
+            HttpContext.Session.Remove("lexemeTestAttempts");
 
             await HttpContext.Session.CommitAsync();
 
