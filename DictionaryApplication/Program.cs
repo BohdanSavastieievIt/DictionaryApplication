@@ -37,6 +37,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireUppercase = false;
     options.Password.RequiredLength = 5;
     options.Password.RequiredUniqueChars = 0;
+    options.SignIn.RequireConfirmedAccount = false;
 
     // User settings.
     options.User.AllowedUserNameCharacters =

@@ -6,53 +6,85 @@
     ViewData["Title"] = "Knowledge Test";
 }
 
-<h1>@ViewData["Title"]</h1>
-
-<form asp-action="SelectUserDictionaries" method="post">
-    <div class="form-group">
-        <label asp-for="IdsOfSelectedDictionariesForTest" class="control-label">Select dictionaries:</label>
-        <br />
-
-        <button type="button" id="select-all-btn">Select all options</button>
-        <button type="button" id="unselect-all-btn">Unselect all options</button>
-        <br />
+<h4 class="text-center mt-4 mb-4">Select the dictionaries you would like the words from to be in the test:</h4>
 
 
-        @for (int i = 0; i < Model.UserDictionaries.Count(); i++)
-        {
-            var dictionary = Model.UserDictionaries[i];
-            <input type="checkbox" id="SelectedDictionaryIds_@i" name="IdsOfSelectedDictionariesForTest" value="@dictionary.Id" />
-            <label for="SelectedDictionaryIds_@i">@dictionary.Name</label>
+<div class="container">
+    <form asp-action="SelectUserDictionaries" method="post">
+        <table class="table" id="dict-test-table">
+            <thead class="thead-link">
+                <tr>
+                    <th class="col-md-1">
+                        <div class="checkbox-container thead-checkbox-container">
+                            <input type="checkbox" id="select-all-checkbox" />
+                            <span class="checkmark"></span>
+                        </div>
+                    </th>
+                    <th class="col-md-4">
+                        <h5>Dictionary Name</h5>
+                    </th>
+                    <th class="col-md-5">
+                        <h5>Description</h5>
+                    </th>
+                    <th class="col-md-1">
+                        <h5>Languages</h5>
+                    </th>
+                    <th class="col-md-1">
+                        <h5>Lexemes</h5>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var dict in Model.UserDictionaries)
+                {
+                    <label class="table-row-label"></label>
+                    <tr class="table-row-link">
+                        <td>
+                            <div class="checkbox-container">
+                                <input type="checkbox" class="table-row-checkbox" name="IdsOfSelectedDictionariesForTest" value="@dict.UserDictionary.Id" />
+                                <span class="checkmark"></span>
+                            </div>         
+                        </td>
+                        <td>
+                                @Html.DisplayFor(modelItem => dict.UserDictionary.Name)
+                        </td>
+                        <td>
+                                @Html.DisplayFor(modelItem => dict.UserDictionary.Description)
+                        </td>
+                        <td>
+                                @Html.DisplayFor(modelItem => dict.UserDictionary.StudiedLanguage.LangCode)/@Html.DisplayFor(modelItem => dict.UserDictionary.TranslationLanguage.LangCode)
+                        </td>
+                        <td>
+                                @Html.DisplayFor(modelItem => dict.TotalLexemes)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
 
-            <br />
-        }
+
         <span asp-validation-for="IdsOfSelectedDictionariesForTest" class="text-danger"></span>
-        <span id="selected-dictionaries-error" class="text-danger" style="display:none;">Please select at least one dictionary.</span>
-    </div>
-    @if (Model.IsSampleEmpty)
-    {
-        <div style="color: red">
-            @ViewData["ErrorInfo"]
+        <div class="text-center">
+            <span id="selected-dictionaries-error" class="error-text">Please select at least one dictionary.</span>
         </div>
-    }
-    <br />
+        @if (Model.IsSampleEmpty)
+        {
+            <div class="error-text">
+                @ViewData["ErrorInfo"]
+            </div>
+        }
+        <br />
+        <div class="form-group text-center">
+            <input type="submit" value="Submit" class="big-btn" />
+        </div>
+    </form>
+</div>
 
-
-    <button type="submit">Continue</button>
-</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
         $(function () {
-            $("#select-all-btn").click(function () {
-                $("input[name='IdsOfSelectedDictionariesForTest']").prop("checked", true);
-            });
-
-            $("#unselect-all-btn").click(function () {
-                $("input[name='IdsOfSelectedDictionariesForTest']").prop("checked", false);
-            });
-
             $("form").submit(function () {
                 var selectedDictionaries = $("input[name='IdsOfSelectedDictionariesForTest']:checked");
 
@@ -64,5 +96,64 @@
                 return true;
             });
         });
+
+        $(document).ready(function () {
+            $(".thead-link").click(function (event) {
+                if (event.target.type !== 'checkbox') {
+                    var isChecked = $("#select-all-checkbox").prop("checked");
+                    $("input[name='IdsOfSelectedDictionariesForTest']").prop("checked", !isChecked);
+                    $(".table-row-link").toggleClass("row-selected", !isChecked);
+                    $("#select-all-checkbox").prop("checked", !isChecked);
+                    updateHeaderCheckboxState(); // Обновление состояния чекбокса в thead
+                    $("#selected-dictionaries-error").hide();
+                }
+            });
+
+            $(".table-row-link").click(function (event) {
+                event.stopPropagation();
+                $(this).toggleClass("row-selected");
+                var checkbox = $(this).find("input[type='checkbox']");
+                checkbox.prop("checked", !checkbox.prop("checked"));
+                updateHeaderCheckboxState();
+                hideSelectedDictionariesError();
+            });
+
+            $(".table-row-label").click(function (event) {
+                var checkbox = $(this).find("input[type='checkbox']");
+                checkbox.prop("checked", !checkbox.prop("checked"));
+                updateHeaderCheckboxState();
+                hideSelectedDictionariesError();
+            });
+
+            function updateHeaderCheckboxState() {
+                var totalRowCount = $(".table-row-link").length;
+                var selectedRowCount = $(".table-row-link.row-selected").length;
+
+                var allRowsSelected = selectedRowCount > 0 && selectedRowCount === totalRowCount;
+                var partiallySelected = selectedRowCount > 0 && !allRowsSelected;
+
+                $("#select-all-checkbox").prop("checked", allRowsSelected);
+
+                if (partiallySelected) {
+                    $(".thead-checkbox-container").addClass("partially-selected");
+                    $("#select-all-checkbox").prop("checked", true);
+                } else {
+                    $(".thead-checkbox-container").removeClass("partially-selected");
+                }
+            }
+
+            $("#select-all-checkbox").click(function () {
+                var isChecked = $(this).prop("checked");
+                $("input[name='IdsOfSelectedDictionariesForTest']").prop("checked", isChecked);
+                $(".table-row-link").toggleClass("row-selected", isChecked);
+                updateHeaderCheckboxState();
+                hideSelectedDictionariesError();
+            });
+
+            // Проверить, все ли ряды выбраны при загрузке страницы
+            updateHeaderCheckboxState();
+
+        });
+
     </script>
 }

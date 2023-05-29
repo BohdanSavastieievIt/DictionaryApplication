@@ -8,42 +8,63 @@
 <h1>@Model.UserDictionary.Name</h1>
 
 <p>
-    <a asp-page="Create" asp-route-userDictionaryId="@Model.UserDictionary.Id">Create New</a>
+    <a asp-page="Create" asp-route-userDictionaryId="@Model.UserDictionary.Id" class="big-link">Add new lexeme</a>
 </p>
-<select id="sort-select" name="Sort">
-    <option value="date_asc">From oldest to newest</option>
-    <option value="date_desc">From newest to oldest</option>
-    <option value="alphabetical_asc">Aplhabetical - Ascending</option>
-    <option value="alphabetical_desc">Alphabetical - Descending</option>
-    <option value="test_results_asc">Test results - Ascending</option>
-    <option value="test_results_desc">Test results - Descending</option>
-</select>
 
-<form id="searchForm" onsubmit="return performSearch();">
-    <div class="form-actions no-color">
-        <p>
-            Search: <input type="text" id="searchInput" value="@(ViewData["CurrentFilter"] != null ? System.Net.WebUtility.HtmlDecode(ViewData["CurrentFilter"].ToString()) : string.Empty)" />
-            <input type="submit" value="Search" class="btn btn-default" /> |
-            <a asp-action="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="1" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="">Back to Full List</a>
-        </p>
+<div class="container">
+    <div class="row" id="sort-search">
+        <div class="col-md-6 text-center mt-2">
+            <form id="search-form" onsubmit="return performSearch();">
+                <input type="submit" value="Search" class="big-btn lexeme-search-link-btn" />
+                <input type="text" id="search-input" placeholder="Search.." value="@(ViewData["CurrentFilter"] != null ? System.Net.WebUtility.HtmlDecode(ViewData["CurrentFilter"].ToString()) : "")" onfocus="if(this.value=='Search..')this.value='';" />
+            </form>
+            @if (ViewData["CurrentFilter"] != null)
+            {
+                <a class="back-link lexeme-search-link-btn" id="search" asp-action="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="1" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="">Back to Full List</a>
+            }
+
+        </div>
+        <div class="col-md-6 text-center mt-2">
+            <label asp-for="SortOrder">Sort Order: </label>
+            <select id="sort-select" name="Sort">
+                <option value="date_asc">From oldest to newest</option>
+                <option value="date_desc">From newest to oldest</option>
+                <option value="alphabetical_asc">Alphabetical - Ascending</option>
+                <option value="alphabetical_desc">Alphabetical - Descending</option>
+                <option value="test_results_asc">Test results - Ascending</option>
+                <option value="test_results_desc">Test results - Descending</option>
+            </select>
+        </div>
+        
     </div>
-</form>
+</div>
 
 
-<table class="table">
+
+
+<table class="table" id="lexeme-table">
     <thead>
         <tr>
             <th>
-                Number
+                <h5>
+                    №
+                </h5>
+                
             </th>
             <th>
-                Studied Lexeme (@Model.UserDictionary.StudiedLanguage.LangCode)
+                <h5>
+                    Studied Lexeme (@Model.UserDictionary.StudiedLanguage.LangCode)
+                </h5>
             </th>
             <th>
-                Translation (@Model.UserDictionary.TranslationLanguage.LangCode)
+                <h5>
+                    Translation (@Model.UserDictionary.TranslationLanguage.LangCode)
+                </h5>
             </th>
             <th>
-                Test Results
+                <h5>
+                    Test Results
+                </h5>
             </th>
             <th></th>
         </tr>
@@ -53,7 +74,7 @@
             int counter = Model.FirstItemId;
             foreach (var item in Model.LexemeDetailsList.LexemeDetails)
             {
-                <tr>
+                <tr class="@(item.Lexeme.Description != null ? "table-row-link": "other")">
                     <td>
                         @counter.
                     </td>
@@ -66,10 +87,10 @@
                     <td>
                         @Html.DisplayFor(modelItem => item.TestResultsRepresentation)
                     </td>
-                    <td>
-                        <a asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionary.Id"
+                    <td class="right-td">
+                        <a class="small-link lexeme-link" asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionary.Id"
                    asp-route-lexemeId="@item.Lexeme.Id" asp-route-pageId="@Model.LexemeDetailsList.PagingInfo.CurrentPage">Edit</a>
-                        <a asp-page="./Delete" asp-route-userDictionaryId="@Model.UserDictionary.Id"
+                        <a class="small-link lexeme-link" asp-page="./Delete" asp-route-userDictionaryId="@Model.UserDictionary.Id"
                    asp-route-lexemeId="@item.Lexeme.Id" asp-route-pageId="@Model.LexemeDetailsList.PagingInfo.CurrentPage">Delete</a>
                     </td>
                 </tr>
@@ -77,9 +98,9 @@
                     counter++;
                     if (item.Lexeme.Description != null)
                     {
-                        <tr>
-                            <td class="description-cell" colspan="5">
-                                <div class="description-box" style="display: none;">
+                        <tr class="description-row" style="display: none;">
+                            <td colspan="5">
+                                <div class="description-box" >
                                     @Html.DisplayFor(modelItem => item.Lexeme.Description)
                                 </div>
                             </td>
@@ -91,32 +112,31 @@
     </tbody>
 </table>
 
-<div class="pagingDiv">
-    @for (int i = 1; i <= Model.LexemeDetailsList.PagingInfo.TotalPages; i++)
-    {
-        if (i == Model.LexemeDetailsList.PagingInfo.CurrentPage)
+@if (Model.LexemeDetailsList.PagingInfo.TotalPages > 1)
+{
+    <div class="pagingDiv">
+        @for (int i = 1; i <= Model.LexemeDetailsList.PagingInfo.TotalPages; i++)
         {
-            <a class="paging active" asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="@i" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+            if (i == Model.LexemeDetailsList.PagingInfo.CurrentPage)
+            {
+                <a class="paging active" asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="@i" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+            }
+            else
+            {
+                <a class="paging" asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="@i" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+            }
         }
-        else
-        {
-            <a class="paging" asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="@i" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
-        }
-    }
-</div>
-
-
+    </div>
+}
 
 
 
 @section scripts {
     <script>
-        $(document).ready(function () {
-            $('.description-box').hide(); // скрываем текстбоксы с описанием при загрузке страницы
-
-            $('tr').click(function () {
-                var box = $(this).next().find('.description-box');
-                box.slideToggle();
+        
+        $(function () {
+            $(".table-row-link").click(function () {
+                $(this).next(".description-row").toggle();
             });
         });
 
@@ -124,7 +144,7 @@
 
         document.getElementById("sort-select").addEventListener("change", function () {
             var selectedValue = this.value;
-            var searchString = document.getElementById('searchInput').value;
+            var searchString = document.getElementById('search-input').value;
             window.location.assign("/UserDictionarySelector/UserDictionaryView/" + @Model.UserDictionary.Id + "/" + + @Model.LexemeDetailsList.PagingInfo.CurrentPage + "/" + selectedValue + "/" + searchString);
         });
 
@@ -142,7 +162,7 @@
         });
 
         function performSearch() {
-            var searchString = document.getElementById('searchInput').value;
+            var searchString = document.getElementById('search-input').value;
             var currentSortOrder = document.getElementById('sort-select').value;
             window.location.assign("/UserDictionarySelector/UserDictionaryView/" + @Model.UserDictionary.Id + "/" + 1 + "/" + currentSortOrder + "/" + searchString);
             return false;

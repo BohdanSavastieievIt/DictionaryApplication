@@ -3,25 +3,27 @@
 @using DictionaryApplication.Data;
 @model DictionaryApplication.Pages.KnowledgeTest.TestWordModel
 @{
-    ViewData["Title"] = "Enter the translation:";
+    ViewData["Title"] = "Enter the translation for:";
 }
 
-<h2>@ViewData["Title"]</h2>
-<br />
-<form asp-action="SumbitTranslation" method="post" id="translationForm">
-    <h5>
-        @Html.Raw(Model.DisplayedLexeme.Replace("\n", "<br />"))
-    </h5>
-    <br />
-    <div class="form-group">
-        <input asp-for="TestAnswer" class="form-control" />
-        <span asp-validation-for="TestAnswer" class="text-danger"></span>
-    </div>
-    <br/>
-    <div class="form-group">
-        <input type="submit" value="Create" class="btn btn-primary" />
-    </div>
-</form>
+<div class="small-container text-center">
+    <h2 class="mb-3">@ViewData["Title"]</h2>
+
+    <form asp-action="SumbitTranslation" method="post" id="translationForm">
+        <h5>
+            @Html.Raw(Model.DisplayedLexeme.Replace("\n", "<br />"))
+        </h5>
+        <br />
+        <div class="form-group">
+            <input asp-for="TestAnswer" class="form-control" />
+        </div>
+        <br />
+        <div class="form-group">
+            <input type="submit" value="Enter" class="big-btn" />
+        </div>
+    </form>
+</div>
+
 
 @section Scripts{
     <partial name="_ValidationScriptsPartial" />

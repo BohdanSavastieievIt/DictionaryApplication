@@ -15,7 +15,7 @@ namespace DictionaryApplication.Pages.KnowledgeTest
         public TestWordModel() {}
 
         [BindProperty]
-        public string TestAnswer { get; set; } = null!;
+        public string? TestAnswer { get; set; }
         public string DisplayedLexeme { get; set; } = null!;
 
         public async Task<IActionResult> OnGetAsync()

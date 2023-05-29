@@ -2,73 +2,72 @@
 @model DictionaryApplication.Pages.UserDictionarySelector.UserDictionaryView.EditModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Lexeme";
 }
 
-<h1>Edit</h1>
+<h1>Edit lexeme</h1>
 
 <hr />
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="form-group centered">
-                <table id="lexemeTable">
-                    <thead>
-                        <tr>
-                            <td>Studied Lexeme (@Model.UserDictionary.StudiedLanguage.LangCode)</td>
-                            <td>Translations (@Model.UserDictionary.TranslationLanguage.LangCode)</td>
-                        </tr>
-                    </thead>
-                    <tbody id="tbbody">
-                        <tr>
-                            <td>
-                                <input asp-for="LexemeInput.Lexeme" class="form-control" />
-                                <span asp-validation-for="LexemeInput.Lexeme" class="text-danger"></span>
-                            </td>
-
-                            <td>
-                                <input type="text" name="LexemeInput.Translations[0]" class="form-control translations" value="@Model.LexemeInput.Translations[0]" required />
-                                <span class="text-danger field-validation-valid" data-valmsg-for="LexemeInput.Translations[0]" data-valmsg-replace="true"></span>
-                            </td>
-                            <td>
-                                <button type="button" class="btn" id="add-translation">Add Translation</button>
-                            </td>
-                            <td>
-                            </td>
-                        </tr>
-                        @for (int i = 1; i < Model.LexemeInput.Translations.Count; i++)
-                        {
+                <div class="mb-3">
+                    <table>
+                        <thead>
                             <tr>
-                                <td></td>
+                                <th class="col-md-3">Studied Lexeme (@Model.UserDictionary.StudiedLanguage.LangCode)</th>
+                                <th class="col-md-3">Translations (@Model.UserDictionary.TranslationLanguage.LangCode)</th>
+                                <th class="col-md-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbbody">
+                            <tr class="my-2">
                                 <td>
-                                    <input type="text" name="LexemeInput.Translations[@i]" class="form-control translations" value="@Model.LexemeInput.Translations[i]" required />
-                                    <span class="text-danger field-validation-valid" data-valmsg-for="LexemeInput.Translations[@i]" data-valmsg-replace="true"></span>
+                                    <input asp-for="LexemeInput.Lexeme" class="form-control small-input" />
+                                    <span asp-validation-for="LexemeInput.Lexeme" class="text-danger"></span>
                                 </td>
                                 <td>
-                                    <button type="button" class="btn btn-danger remove-translation">X</button>
+                                    <input type="text" name="LexemeInput.Translations[0]" class="form-control small-input translations" value="@Model.LexemeInput.Translations[0]" required />
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="LexemeInput.Translations[0]" data-valmsg-replace="true"></span>
+                                </td>
+                                <td>
+                                    <button type="button" class="big-btn add-translation">Add Translation</button>
                                 </td>
                             </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                            @for (int i = 1; i < Model.LexemeInput.Translations.Count; i++)
+                            {
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <input type="text" name="LexemeInput.Translations[@i]" class="form-control small-input translations" value="@Model.LexemeInput.Translations[i]" required />
+                                        <span class="text-danger field-validation-valid" data-valmsg-for="LexemeInput.Translations[@i]" data-valmsg-replace="true"></span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="big-btn remove-translation">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="form-group">
-                <label asp-for="LexemeInput.Description" class="control-label">Description (Optional)</label>
-                <input asp-for="LexemeInput.Description" class="form-control" />
-                <span asp-validation-for="LexemeInput.Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+                <div class="form-group mb-4">
+                    <label asp-for="LexemeInput.Description" class="control-label">Description (Optional)</label>
+                    <textarea asp-for="LexemeInput.Description" class="form-control autosize"></textarea>
+                    <span asp-validation-for="LexemeInput.Description" class="text-danger"></span>
+                </div>
+                <div class="form-group text-center">
+                    <input type="submit" value="Save" class="big-btn" />
+                </div>
+                <div class="text-center">
+                    <a class="back-link" asp-page="./Index" asp-route-userDictionaryId="@Model.UserDictionary.Id">Back to List</a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-page="./Index" asp-route-userDictionaryId="@Model.UserDictionary.Id">Back to List</a>
 </div>
 
 @section Scripts {
@@ -76,6 +75,11 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            autosize(document.querySelectorAll('.autosize'));
+        });
+
         $(document).ready(function () {
             var totalTranslations = @Model.LexemeInput.Translations.Count - 1;
 
@@ -129,19 +133,21 @@
                 refreshIndexes();
             });
 
-            $("#add-translation").click(function () {
+            $(".add-translation").click(function () {
                 totalTranslations++;
                 var translationRow = $("<tr>");
 
                 var lexemeCell = $("<td>");
+
                 var translationCell = $("<td>");
 
                 var translationInput = $("<input>")
                     .attr("type", "text")
                     .attr("name", "LexemeInput.Translations[" + totalTranslations + "]")
-                    .addClass("form-control translations")
+                    .addClass("form-control small-input translations")
                     .attr("required", "required");
 
+                // Add new field to the validator
                 validator.settings.rules["LexemeInput.Translations[" + totalTranslations + "]"] = { required: true };
                 validator.settings.messages["LexemeInput.Translations[" + totalTranslations + "]"] = { required: "The Translation field is required." };
 
@@ -156,8 +162,11 @@
                 var actionCell = $("<td>");
 
                 var translationButton = $("<button>")
-                    .addClass("btn btn-danger remove-translation")
-                    .text("X");
+                    .attr("type", "button")
+                    .addClass("big-btn remove-translation")
+                    .text("Delete");
+
+
 
                 actionCell.append(translationButton);
 
@@ -179,5 +188,6 @@
             });
 
         });
+
     </script>
 }

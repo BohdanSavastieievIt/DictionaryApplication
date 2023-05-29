@@ -29,7 +29,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
 
         [BindProperty]
         public List<int> IdsOfSelectedDictionariesForTest { get; set; } = null!;
-        public List<UserDictionary> UserDictionaries { get; set; } = null!;
+        public List<(UserDictionary UserDictionary, int TotalLexemes)> UserDictionaries { get; set; } = null!;
+
         public bool IsSampleEmpty { get; set; } = false;
 
         public async Task<IActionResult> OnGetAsync(bool isEmpty)
@@ -46,9 +47,10 @@ namespace DictionaryApplication.Pages.KnowledgeTest
                 ViewData["ErrorInfo"] = "Selected dictionaries contain no words.";
             }
 
-            UserDictionaries = await _userDictionaryRepository.GetAllAsync(currentUser.Id);
+            UserDictionaries = await _userDictionaryRepository.GetAllWithLexemesAmountAsync(currentUser.Id);
+            UserDictionaries = UserDictionaries.Where(ud => ud.TotalLexemes > 0).ToList();
 
-            if(UserDictionaries.Count == 0)
+            if (UserDictionaries.Count == 0)
             {
                 return RedirectToPage("/UserDictionarySelector/Create", new { isNoDictionaries = true });
             }

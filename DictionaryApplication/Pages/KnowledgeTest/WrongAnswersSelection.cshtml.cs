@@ -36,6 +36,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
             _knowledgeTestService.CheckAnswers(ref lexemeTestAttempts, knowledgeTestParameters);
             HttpContext.Session.SetList("lexemeTestAttempts", lexemeTestAttempts);
 
+            lexemeTestAttempts = lexemeTestAttempts.Where(ta => !string.IsNullOrEmpty(ta.TestAnswer)).ToList();
+
             if (!lexemeTestAttempts.Any(ta => !ta.IsCorrectAnswer))
             {
                 return RedirectToPage("TestResult");

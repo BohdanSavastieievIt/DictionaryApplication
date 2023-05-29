@@ -6,16 +6,15 @@
     ViewData["Title"] = "Test Result";
 }
 
-<h1>@ViewData["Title"]</h1>
 
-<div>
-    <h2>
-        Your result is:
+<div class="container text-center">
+    <h2 class="mt-lg-5">
+        Your test result is:
     </h2>
     <br />
     <h1>@ViewData["TotalCorrectAnswers"] out of @ViewData["TotalAnswers"] (@ViewData["CorrectAnswersPercentage"]%)</h1>
     <br />
     <br />
     <br />
-    <a asp-page="/UserDictionarySelector/Index">Go To Dictionaries</a>
+    <a class="back-link" asp-page="/UserDictionarySelector/Index">Go To Dictionaries</a>
 </div>

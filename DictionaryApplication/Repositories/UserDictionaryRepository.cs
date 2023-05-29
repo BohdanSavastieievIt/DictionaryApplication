@@ -49,7 +49,8 @@ namespace DictionaryApplication.Repositories
             var all = _context.Set<UserDictionary>()
                 .Where(x => x.UserId == userId)
                 .Include(ud => ud.StudiedLanguage)
-                .Include(ud => ud.TranslationLanguage);
+                .Include(ud => ud.TranslationLanguage)
+                .Include(ud => ud.Lexemes);
             var relevant = await all.Skip(skip).Take(take).ToListAsync();
             var total = all.Count();
 
@@ -63,6 +64,7 @@ namespace DictionaryApplication.Repositories
             return await _context.Set<UserDictionary>()
                 .Include(ud => ud.StudiedLanguage)
                 .Include(ud => ud.TranslationLanguage)
+                .Include(ud => ud.Lexemes)
                 .FirstOrDefaultAsync(ud => ud.Id == id);
         }
 
@@ -72,7 +74,28 @@ namespace DictionaryApplication.Repositories
                 .Where(x => x.UserId == userId)
                 .Include(ud => ud.StudiedLanguage)
                 .Include(ud => ud.TranslationLanguage)
+                .Include(ud => ud.Lexemes)
                 .ToListAsync();
+        }
+
+        public async Task<List<(UserDictionary, int)>> GetAllWithLexemesAmountAsync(string userId)
+        {
+            var dictionaries = await GetAllAsync(userId);
+            var result = new List<(UserDictionary, int)>();
+            foreach(var dictionary in dictionaries)
+            {
+                result.Add((dictionary, await GetLexemesAmount(dictionary.Id)));
+            }
+
+            return result;
+        }
+
+        public async Task<int> GetLexemesAmount(int id)
+        {
+            var dict = await GetByIdAsync(id);
+            return dict == null || dict.Lexemes == null 
+                ? 0 
+                : dict.Lexemes.Count(l => l.LangId == dict.StudiedLangId);
         }
     }
 }

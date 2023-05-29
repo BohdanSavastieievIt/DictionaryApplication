@@ -35,6 +35,7 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
             else 
             {
                 UserDictionary = userDictionary;
+                ViewData["TotalLexemes"] = await _repository.GetLexemesAmount(id);
             }
 
             return Page();

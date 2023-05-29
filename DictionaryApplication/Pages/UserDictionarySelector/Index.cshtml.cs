@@ -26,7 +26,9 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
             _userManager = userManager;
             _userDictionaryRepository = userDictionaryRepository;
         }
-        public List<UserDictionary> UserDictionaries { get; set; } = null!;
+
+        //public List<UserDictionary> UserDictionaries { get; set; } = null!;
+        public List<(UserDictionary UserDictionary, int TotalLexemes)> UserDictionaries { get; set; } = null!;
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -37,7 +39,7 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            UserDictionaries  = await _userDictionaryRepository.GetAllAsync(currentUser.Id);
+            UserDictionaries = await _userDictionaryRepository.GetAllWithLexemesAmountAsync(currentUser.Id);
             if (UserDictionaries.Count == 0)
             {
                 return RedirectToPage("Create", new { isNoDictionaries = true });
