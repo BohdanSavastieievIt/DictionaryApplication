@@ -6,54 +6,121 @@
     ViewData["Title"] = "Select words that you consider correct";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container text-center">
+    <form asp-action="SelectCorrectWords" method="post">
+        <label class="control-label h4 mb-3 mt-2">Select lexemes which you consider as translated correctly:</label>
+        <table class="table mb-2" id="wrong-answers-table">
+            <thead class="thead-link">
+                <tr>
+                    <th class="col-md-1">
+                        <div class="checkbox-container thead-checkbox-container">
+                            <input type="checkbox" id="select-all-checkbox" />
+                            <span class="checkmark"></span>
+                        </div>
+                    </th>
+                    <th class="col-md-4">
+                        <h5>Lexeme</h5>
+                    </th>
+                    <th class="col-md-5">
+                        <h5>Correct Translation</h5>
+                    </th>
+                    <th class="col-md-1">
+                        <h5>Your Answer</h5>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    for (int i = 0; i < Model.LexemeTestAttempts.Count; i++)
+                    {
+                        if (!Model.LexemeTestAttempts[i].IsCorrectAnswer)
+                        {
+                            <tr class="table-row-link">
+                                <td>
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" class="table-row-checkbox" name="CorrectedLexemeIds" value="@Model.LexemeTestAttempts[i].Lexeme.Id" />
+                                        <span class="checkmark"></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @Html.Raw(Model.LexemeTestAttempts[i].LexemeTestRepresentation.Replace("\n", "<br />"))
+                                </td>
+                                <td>
+                                    @Html.Raw(Model.LexemeTestAttempts[i].CorrectAnswerRepresentation.Replace("\n", "<br />"))
+                                </td>
+                                <td>
+                                    @Model.LexemeTestAttempts[i].TestAnswer
 
-<form asp-action="SelectCorrectWords" method="post">
-    <label asp-for="IsAnswerChangedToCorrect" class="control-label">Check boxes with words that you consider correct:</label>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>
-                    Lexeme
-                </th>
-                <th>
-                    Correct Translation
-                </th>
-                <th>
-                    Your Answer
-                </th>
-                <th>
-                    Answer is acceptable
-                </th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @{
-                Model.IsAnswerChangedToCorrect = new List<bool>();
-                for (int i = 0; i < Model.FailedLexemes.Count; i++)
-                {
-                    Model.IsAnswerChangedToCorrect.Add(false);
-                    <tr>
-                        <td>
-                            @Model.FailedLexemes[i].Lexeme
-                        </td>
-                        <td>
-                            @Model.FailedTranslations[i].Lexeme
-                        </td>
-                        <td>
-                            @Model.WrongAnswers[i].Answer
-                        </td>
-                        <td>
-                            <input type="checkbox" asp-for="@Model.IsAnswerChangedToCorrect[i]" />
-                        </td>
-                    </tr>
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+
+
+        <div class="form-group">
+            <input type="submit" value="Submit" class="big-btn mt-3" />
+        </div>
+    </form>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $(".thead-link").click(function (event) {
+                if (event.target.type !== 'checkbox') {
+                    var isChecked = $("#select-all-checkbox").prop("checked");
+                    $("input[name='CorrectedLexemeIds']").prop("checked", !isChecked);
+                    $(".table-row-link").toggleClass("row-selected", !isChecked);
+                    $("#select-all-checkbox").prop("checked", !isChecked);
+                    updateHeaderCheckboxState(); // Обновление состояния чекбокса в thead
+                }
+            });
+
+            $(".table-row-link").click(function (event) {
+                event.stopPropagation();
+                $(this).toggleClass("row-selected");
+                var checkbox = $(this).find("input[type='checkbox']");
+                checkbox.prop("checked", !checkbox.prop("checked"));
+                updateHeaderCheckboxState();
+            });
+
+            $(".table-row-label").click(function (event) {
+                var checkbox = $(this).find("input[type='checkbox']");
+                checkbox.prop("checked", !checkbox.prop("checked"));
+                updateHeaderCheckboxState();
+            });
+
+            function updateHeaderCheckboxState() {
+                var totalRowCount = $(".table-row-link").length;
+                var selectedRowCount = $(".table-row-link.row-selected").length;
+
+                var allRowsSelected = selectedRowCount > 0 && selectedRowCount === totalRowCount;
+                var partiallySelected = selectedRowCount > 0 && !allRowsSelected;
+
+                $("#select-all-checkbox").prop("checked", allRowsSelected);
+
+                if (partiallySelected) {
+                    $(".thead-checkbox-container").addClass("partially-selected");
+                    $("#select-all-checkbox").prop("checked", true);
+                } else {
+                    $(".thead-checkbox-container").removeClass("partially-selected");
                 }
             }
-        </tbody>
 
-    </table>
-    <div class="form-group">
-        <input type="submit" value="Submit" class="btn btn-primary" />
-    </div>
-</form>
+            $("#select-all-checkbox").click(function () {
+                var isChecked = $(this).prop("checked");
+                $("input[name='CorrectedLexemeIds']").prop("checked", isChecked);
+                $(".table-row-link").toggleClass("row-selected", isChecked);
+                updateHeaderCheckboxState();
+            });
+
+            // Проверить, все ли ряды выбраны при загрузке страницы
+            updateHeaderCheckboxState();
+
+        });
+
+    </script>
+}

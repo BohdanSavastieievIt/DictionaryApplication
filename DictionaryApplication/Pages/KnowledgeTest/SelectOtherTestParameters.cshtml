@@ -3,45 +3,83 @@
 @using DictionaryApplication.Data;
 @model DictionaryApplication.Pages.KnowledgeTest.SelectOtherTestParametersModel
 @{
-    ViewData["Title"] = "Select other test parameters";
+    ViewData["Title"] = "Select other test parameters:";
 }
 
 <h1>@ViewData["Title"]</h1>
 
-<form asp-action="StartTest" method="post" id="knowledgeTestForm">
+<div class="small-container">
+    <form asp-action="StartTest" method="post" class="text-center" id="knowledgeTestForm">
+        @for (int i = 0; i < Model.SelectedDictionaryIds.Count; i++)
+        {
+            <input type="hidden" asp-for="TestParameters.SelectedDictionaryIds[i]" value="@Model.SelectedDictionaryIds[i]">
+        }
+        <div class="form-group mb-2">
+            <label class="h5" asp-for="TestParameters.NumberOfWords">Number of words:</label><br>
+            <input type="number" name="TestParameters.NumberOfWords" min="1" id="numberOfWordsInput" max="@Model.MaxLexemesAmount" required />
+            <button type="button" class="small-btn" id="max-words-button">max</button><br>
+            <span asp-validation-for="TestParameters.NumberOfWords" class="text-danger"></span>
+        </div>
+    </div>
+        <div class="form-group mb-2">
+            <label class="h5">Type of words which will be sampled for the test:</label>
+            <label class="radio-container">
+                <input type="radio" asp-for="TestParameters.TestType" value="AllWords" id="radio-all-words" />
+                <span class="radio-checkmark"></span>
+                <span class="radio-text">All words</span>
+            </label>
+            <label class="radio-container">
+                <input type="radio" asp-for="TestParameters.TestType" value="LastWords" id="radio-last-words" />
+                <span class="radio-checkmark"></span>
+                <span class="radio-text">Last words</span>
+            </label>
+            <label class="radio-container">
+                <input type="radio" asp-for="TestParameters.TestType" value="WordsWithWorstResults" id="radio-worst-words" />
+                <span class="radio-checkmark"></span>
+                <span class="radio-text">Words with worst results</span>
+            </label>
+            <span asp-validation-for="TestParameters.TestType" class="text-danger"></span>
+        </div>
 
-    <div class="form-group">
-        <label asp-for="KnowledgeTest.NumberOfWords">Number of words:</label>
-        <br />
-        <input type="number" name="KnowledgeTest.NumberOfWords" min="1" id="numberOfWordsInput" max="@Model.MaxLexemesAmount" />
-        <button type="button" id="max-words-button">max</button>
-        <br />
-        <span asp-validation-for="KnowledgeTest.NumberOfWords" class="text-danger"></span>
-    </div>
-    <br />
+        <div class="form-group mb-2">
+            <label class="h5">Translation direction:</label>
+            <br />
+            <label class="radio-container">
+                <input type="radio" asp-for="TestParameters.IsUserTranslatesStudiedLanguage" value="true" />
+                <span class="radio-checkmark"></span>
+                <span class="radio-text">From studied language</span>
+            </label>
+            <label class="radio-container">
+                <input type="radio" asp-for="TestParameters.IsUserTranslatesStudiedLanguage" value="false" />
+                <span class="radio-checkmark"></span>
+                <span class="radio-text">From translation language</span>
+            </label>
+            <span asp-validation-for="TestParameters.IsUserTranslatesStudiedLanguage" class="text-danger"></span>
+        </div>
 
-    <div class="form-group">
-        <label>Test type:</label>
-        <br />
-        <input type="radio" asp-for="KnowledgeTest.TestType" value="AllWords" /> All words<br />
-        <input type="radio" asp-for="KnowledgeTest.TestType" value="LastWords" /> Last words<br />
-        <input type="radio" asp-for="KnowledgeTest.TestType" value="WordsWithWorstResults" /> Words with worst results<br />
-        <span asp-validation-for="KnowledgeTest.TestType" class="text-danger"></span>
-    </div>
-    <br />
-    <div class="form-group">
-        <label>Translation direction:</label>
-        <br />
-        <input type="radio" asp-for="KnowledgeTest.IsTranslationFromMainLanguage" value="true" /> Main language to secondary language<br />
-        <input type="radio" asp-for="KnowledgeTest.IsTranslationFromMainLanguage" value="false" /> Secondary language to main language<br />
-        <span asp-validation-for="KnowledgeTest.IsTranslationFromMainLanguage" class="text-danger"></span>
-    </div>
-    <br />
+        <button type="submit" class="big-btn mb-2">Start test</button>
+    </form>
+</div>
+
     <button type="submit">Start test</button>
 </form>
 
-<script>
-    document.getElementById("max-words-button").addEventListener("click", function() {
-        document.getElementById("numberOfWordsInput").value = "@Model.MaxLexemesAmount";
-    });
-</script>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById("max-words-button").addEventListener("click", function () {
+            document.getElementById("numberOfWordsInput").value = "@Model.MaxLexemesAmount";
+        });
+
+        document.getElementById("numberOfWordsInput").addEventListener("input", function () {
+            var maxWords = parseInt("@Model.MaxLexemesAmount");
+            var input = this;
+            if (input.value > maxWords) {
+                input.value = maxWords;
+            }
+            else if (input.value < 1) {
+                input.value = 1;
+            }
+        });
+    </script>
+}

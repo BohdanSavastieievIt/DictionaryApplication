@@ -40,10 +40,9 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
             }
             else 
             {
-                UserDictionary = userdictionary;
+                UserDictionary = userDictionary;
+                ViewData["TotalLexemes"] = await _repository.GetLexemesAmount(id);
             }
-            return Page();
-        }
 
         public async Task<IActionResult> OnPostAsync(int? id)
         {

@@ -8,39 +8,168 @@
 <h1>@ViewData["CurrentDictionaryName"]</h1>
 
 <p>
-    <a asp-page="Create" asp-route-id="@Model.UserDictionaryId">Create New</a>
+    <a asp-page="Create" asp-route-userDictionaryId="@Model.UserDictionary.Id" class="big-link">Add new lexeme</a>
 </p>
-<table class="table">
+
+<div class="container">
+    <div class="row" id="sort-search">
+        <div class="col-md-6 text-center mt-2">
+            <form id="search-form" onsubmit="return performSearch();">
+                <input type="submit" value="Search" class="big-btn lexeme-search-link-btn" />
+                <input type="text" id="search-input" placeholder="Search.." value="@(ViewData["CurrentFilter"] != null ? System.Net.WebUtility.HtmlDecode(ViewData["CurrentFilter"].ToString()) : "")" onfocus="if(this.value=='Search..')this.value='';" />
+            </form>
+            @if (ViewData["CurrentFilter"] != null)
+            {
+                <a class="back-link lexeme-search-link-btn" id="search" asp-action="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="1" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="">Back to Full List</a>
+            }
+
+        </div>
+        <div class="col-md-6 text-center mt-2">
+            <label asp-for="SortOrder">Sort Order: </label>
+            <select id="sort-select" name="Sort">
+                <option value="date_asc">From oldest to newest</option>
+                <option value="date_desc">From newest to oldest</option>
+                <option value="alphabetical_asc">Alphabetical - Ascending</option>
+                <option value="alphabetical_desc">Alphabetical - Descending</option>
+                <option value="test_results_asc">Test results - Ascending</option>
+                <option value="test_results_desc">Test results - Descending</option>
+            </select>
+        </div>
+        
+    </div>
+</div>
+
+
+
+
+<table class="table" id="lexeme-table">
     <thead>
         <tr>
             <th>
-                Studied Lexeme
+                <h5>
+                    №
+                </h5>
+                
             </th>
             <th>
-                Translation
+                <h5>
+                    Studied Lexeme (@Model.UserDictionary.StudiedLanguage.LangCode)
+                </h5>
+            </th>
+            <th>
+                <h5>
+                    Translation (@Model.UserDictionary.TranslationLanguage.LangCode)
+                </h5>
+            </th>
+            <th>
+                <h5>
+                    Test Results
+                </h5>
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model.LexemePairs)
-        {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Lexeme1.Word)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Lexeme2.Word)
-                </td>
-                <td>
-                    <a asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionaryId" 
-                        asp-route-lexeme1Id="@item.Lexeme1Id" asp-route-lexeme2Id="@item.Lexeme2Id">Edit</a>
-                    <a asp-page="./Details" asp-route-userDictionaryId="@Model.UserDictionaryId"
-                        asp-route-lexeme1Id="@item.Lexeme1Id" asp-route-lexeme2Id="@item.Lexeme2Id">Details</a>
-                    <a asp-page="./Delete" asp-route-userDictionaryId="@Model.UserDictionaryId"
-                        asp-route-lexeme1Id="@item.Lexeme1Id" asp-route-lexeme2Id="@item.Lexeme2Id">Delete</a>
-                </td>
-            </tr>
+        @{
+            int counter = Model.FirstItemId;
+            foreach (var item in Model.LexemeDetailsList.LexemeDetails)
+            {
+                <tr class="@(item.Lexeme.Description != null ? "table-row-link": "other")">
+                    <td>
+                        @counter.
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Lexeme.Word)
+                    </td>
+                    <td>
+                        @Html.Raw(item.TranslationsRepresentation.Replace("\n", "<br />"))
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.TestResultsRepresentation)
+                    </td>
+                    <td class="right-td">
+                        <a class="small-link lexeme-link" asp-page="./Edit" asp-route-userDictionaryId="@Model.UserDictionary.Id"
+                   asp-route-lexemeId="@item.Lexeme.Id" asp-route-pageId="@Model.LexemeDetailsList.PagingInfo.CurrentPage">Edit</a>
+                        <a class="small-link lexeme-link" asp-page="./Delete" asp-route-userDictionaryId="@Model.UserDictionary.Id"
+                   asp-route-lexemeId="@item.Lexeme.Id" asp-route-pageId="@Model.LexemeDetailsList.PagingInfo.CurrentPage">Delete</a>
+                    </td>
+                </tr>
+                {
+                    counter++;
+                    if (item.Lexeme.Description != null)
+                    {
+                        <tr class="description-row" style="display: none;">
+                            <td colspan="5">
+                                <div class="description-box" >
+                                    @Html.DisplayFor(modelItem => item.Lexeme.Description)
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
         }
     </tbody>
 </table>
+
+@if (Model.LexemeDetailsList.PagingInfo.TotalPages > 1)
+{
+    <div class="pagingDiv">
+        @for (int i = 1; i <= Model.LexemeDetailsList.PagingInfo.TotalPages; i++)
+        {
+            if (i == Model.LexemeDetailsList.PagingInfo.CurrentPage)
+            {
+                <a class="paging active" asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="@i" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+            }
+            else
+            {
+                <a class="paging" asp-page="Index" asp-route-userDictionaryId="@Model.UserDictionary.Id" asp-route-pageId="@i" asp-route-sortOrder="@Model.SortOrder" asp-route-searchString="@ViewData["CurrentFilter"]">@i</a>
+            }
+        }
+    </div>
+}
+
+
+
+@section scripts {
+    <script>
+        
+        $(function () {
+            $(".table-row-link").click(function () {
+                $(this).next(".description-row").toggle();
+            });
+        });
+
+        var currentSearchString = "@ViewData["CurrentFilter"]"; // добавьте эту строку
+
+        document.getElementById("sort-select").addEventListener("change", function () {
+            var selectedValue = this.value;
+            var searchString = document.getElementById('search-input').value;
+            window.location.assign("/UserDictionarySelector/UserDictionaryView/" + @Model.UserDictionary.Id + "/" + + @Model.LexemeDetailsList.PagingInfo.CurrentPage + "/" + selectedValue + "/" + searchString);
+        });
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var sortOrder = "@Model.SortOrder"; // Получаем значение sortOrder из модели
+            var sortSelect = document.getElementById("sort-select");
+            var options = sortSelect.options;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].value === sortOrder) {
+                    options[i].setAttribute("selected", "selected");
+                    break;
+                }
+            }
+        });
+
+        function performSearch() {
+            var searchString = document.getElementById('search-input').value;
+            var currentSortOrder = document.getElementById('sort-select').value;
+            window.location.assign("/UserDictionarySelector/UserDictionaryView/" + @Model.UserDictionary.Id + "/" + 1 + "/" + currentSortOrder + "/" + searchString);
+            return false;
+        }
+
+    </script>
+}
+
+
+

@@ -25,8 +25,8 @@ namespace DictionaryApplication.Pages.KnowledgeTest
         }
 
         [BindProperty]
-        public string EnteredTranslation { get; set; }
-        public List<string> DisplayedLexemes { get; set; } = null!;
+        public string? TestAnswer { get; set; }
+        public string DisplayedLexeme { get; set; } = null!;
 
         public async Task<IActionResult> OnGetAsync()
         {

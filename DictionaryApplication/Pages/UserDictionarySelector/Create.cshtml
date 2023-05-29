@@ -6,62 +6,97 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
+<h1>Create your custom dictionary</h1>
 
-<h4>UserDictionary</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="UserDictionary.UserId" value="@Model.CurrentUserId"/>
-            <div class="form-group">
-                <label asp-for="UserDictionary.Name" class="control-label"></label>
-                <input asp-for="UserDictionary.Name" class="form-control" />
-                <span asp-validation-for="UserDictionary.Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UserDictionary.Description" class="control-label"></label>
-                <input asp-for="UserDictionary.Description" class="form-control" />
-                <span asp-validation-for="UserDictionary.Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UserDictionary.StudiedLangId">StudiedLang</label>
-                <select asp-for="UserDictionary.StudiedLangId" asp-items="ViewBag.StudiedLangId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="UserDictionary.TranslationLangId">TranslationLang</label>
-                <select asp-for="UserDictionary.TranslationLangId" asp-items="ViewBag.TranslationLangId"></select>
-            </div>
-            
-            <div id="error-message" class="text-danger"></div>
+@if (Model.ShowNoDictionariesError)
+{
+    <h5 class="error-text">
+        @ViewData["NoDictionariesError"]
+    </h5>
+}
+<hr>
 
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="container">
+    <div class="row">
+        <div class="col-md text-center">
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="UserDictionary.UserId" value="@ViewData["CurrentUserId"]" />
+
+                <div class="form-group mb-3 form-group-languages">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label asp-for="UserDictionary.StudiedLangId" class="h4 d-block mb-2">Studied Language</label>
+                            <select asp-for="UserDictionary.StudiedLangId" asp-items="ViewBag.StudiedLangId"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="UserDictionary.TranslationLangId" class="h4 d-block mb-2">Translation Language</label>
+                            <select asp-for="UserDictionary.TranslationLangId" asp-items="ViewBag.TranslationLangId"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="error-message" class="error-text"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="UserDictionary.Name" class="control-label h4">Dictionary Name</label>
+                    <input asp-for="UserDictionary.Name" class="form-control" />
+                    <span asp-validation-for="UserDictionary.Name" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="UserDictionary.Description" class="control-label h4"></label>
+                    <textarea asp-for="UserDictionary.Description" class="form-control autosize"></textarea>
+                    <span asp-validation-for="UserDictionary.Description" class="text-danger"></span>
+                </div>
+
+
+                <div class="form-group col-mb-3">
+                    <input type="submit" value="Create" class="big-btn" />
+                </div>
+                <div class="col-mb-3">
+                    <a asp-page="Index" class="back-link">Back to Dictionaries</a>
+                </div>
+
+            </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-page="Index">Back to List</a>
-</div>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            autosize(document.querySelectorAll('.autosize'));
+        });
+
         $(function () {
             $("form").submit(function () {
                 var studiedLangId = $("#UserDictionary_StudiedLangId").val();
                 var translationLangId = $("#UserDictionary_TranslationLangId").val();
 
                 if (studiedLangId === translationLangId) {
-                    $("#error-message").text("Studied Language and Translation Language cannot be the same");
+                    $("#error-message").text("Studied Language and Translation Language cannot be the same.");
                     return false;
                 }
 
                 return true;
             });
+
+            $("#UserDictionary_StudiedLangId, #UserDictionary_TranslationLangId").change(function () {
+                var studiedLangId = $("#UserDictionary_StudiedLangId").val();
+                var translationLangId = $("#UserDictionary_TranslationLangId").val();
+
+                if (studiedLangId === translationLangId) {
+                    $("#error-message").text("Studied Language and Translation Language cannot be the same.");
+                } else {
+                    $("#error-message").text("");
+                }
+            });
         });
+
+
     </script>
 }

@@ -8,47 +8,49 @@
 <h1>Index</h1>
 
 <p>
-    <a asp-page="Create">Create New</a>
+    <a class="big-link" asp-page="Create">Create New</a>
 </p>
-<table class="table">
+<table class="table" id="dict-table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.UserDictionary[0].Name)
+                <h5>Dictionary Name</h5>
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.UserDictionary[0].Description)
+                <h5>Description</h5>
             </th>
             <th>
-                Studied Language
+                <h5>Languages</h5>
             </th>
             <th>
-                Translation Language
+                <h5>
+                    Total Words
+                </h5>
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.UserDictionary) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StudiedLanguage.LangCode)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TranslationLanguage.LangCode)
-            </td>
-            <td>
-                <a asp-page="./UserDictionaryView/Index" asp-route-id="@item.Id">Go To Words</a> | 
-                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> | 
-                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var dict in Model.UserDictionaries)
+        {
+            <tr class="table-row-link" onclick="location.href='@Url.Page("./UserDictionaryView/Index", new { pageId = 1, userDictionaryId = dict.UserDictionary.Id })'">
+                <td>
+                    @Html.DisplayFor(modelItem => dict.UserDictionary.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => dict.UserDictionary.Description)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => dict.UserDictionary.StudiedLanguage.LangCode)/@Html.DisplayFor(modelItem => dict.UserDictionary.TranslationLanguage.LangCode)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => dict.TotalLexemes)
+                </td>
+                <td class="right-td">
+                    <a class="small-link" asp-page="./Edit" asp-route-id="@dict.UserDictionary.Id"><span>Edit</span></a>
+                    <a class="small-link" asp-page="./Delete" asp-route-id="@dict.UserDictionary.Id"><span>Delete</span></a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

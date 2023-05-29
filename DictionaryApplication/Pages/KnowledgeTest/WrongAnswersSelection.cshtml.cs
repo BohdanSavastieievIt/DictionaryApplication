@@ -46,8 +46,9 @@ namespace DictionaryApplication.Pages.KnowledgeTest
             var testTranslations = HttpContext.Session.GetList<(int LexemeId, string Lexeme)>("testTranslations");
             var testAnswers = HttpContext.Session.GetList<(int LexemeId, string Answer)>("testAnswers");
 
-            WrongAnswers = _testManager.GetWrongAnswers(testLexemes, testTranslations, testAnswers);
-            if (WrongAnswers.Count == 0)
+            lexemeTestAttempts = lexemeTestAttempts.Where(ta => !string.IsNullOrEmpty(ta.TestAnswer)).ToList();
+
+            if (!lexemeTestAttempts.Any(ta => !ta.IsCorrectAnswer))
             {
                 return RedirectToPage("TestResult");
             }

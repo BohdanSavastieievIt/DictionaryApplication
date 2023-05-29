@@ -19,7 +19,24 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
 builder.Services.AddScoped<UserManager<ApplicationUser>>();
 builder.Services.AddRazorPages();
 
-builder.Services.AddScoped<KnowledgeTestManager>();
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    // Password settings.
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 5;
+    options.Password.RequiredUniqueChars = 0;
+    options.SignIn.RequireConfirmedAccount = false;
+
+    // User settings.
+    options.User.AllowedUserNameCharacters =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+    options.User.RequireUniqueEmail = true;
+});
+
+builder.Services.AddScoped<KnowledgeTestService>();
 
 builder.Services.AddDistributedMemoryCache();
 

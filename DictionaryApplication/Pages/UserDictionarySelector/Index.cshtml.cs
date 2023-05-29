@@ -22,6 +22,9 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
             _userManager = userManager;
         }
 
+        //public List<UserDictionary> UserDictionaries { get; set; } = null!;
+        public List<(UserDictionary UserDictionary, int TotalLexemes)> UserDictionaries { get; set; } = null!;
+
         public IList<UserDictionary> UserDictionary { get;set; } = default!;
 
         public async Task OnGetAsync()
@@ -36,7 +39,9 @@ namespace DictionaryApplication.Pages.UserDictionarySelector
                     .Include(u => u.TranslationLanguage)
                     .Include(u => u.User).ToListAsync();
             }
-            else if (currentUser == null)
+
+            UserDictionaries = await _userDictionaryRepository.GetAllWithLexemesAmountAsync(currentUser.Id);
+            if (UserDictionaries.Count == 0)
             {
                 RedirectToPage("/Account/Login", new { area = "Identity" });
             }
